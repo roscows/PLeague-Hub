@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using MongoDB.Driver;
 using PLeagueHub.Api.Data;
 using PLeagueHub.Api.Models;
@@ -26,6 +27,24 @@ public sealed class MongoRepository<TDocument> : IRepository<TDocument>
         return await _collection
             .Find(document => document.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<TDocument?> FindOneAsync(
+        Expression<Func<TDocument, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        return await _collection
+            .Find(predicate)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsAsync(
+        Expression<Func<TDocument, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        return await _collection
+            .Find(predicate)
+            .AnyAsync(cancellationToken);
     }
 
     public async Task<TDocument> CreateAsync(TDocument document, CancellationToken cancellationToken = default)

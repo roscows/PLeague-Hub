@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -134,6 +135,20 @@ public sealed class ContentEndpointsTests
         public Task<TDocument?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_documents.FirstOrDefault(document => document.Id == id));
+        }
+
+        public Task<TDocument?> FindOneAsync(
+            Expression<Func<TDocument, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_documents.AsQueryable().FirstOrDefault(predicate));
+        }
+
+        public Task<bool> ExistsAsync(
+            Expression<Func<TDocument, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_documents.AsQueryable().Any(predicate));
         }
 
         public Task<TDocument> CreateAsync(TDocument document, CancellationToken cancellationToken = default)

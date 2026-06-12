@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using PLeagueHub.Api.Data.Seeding;
 using PLeagueHub.Api.Models;
 using PLeagueHub.Api.Repositories;
@@ -60,6 +61,20 @@ public sealed class DatabaseSeederTests
         public Task<TDocument?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(Documents.FirstOrDefault(document => document.Id == id));
+        }
+
+        public Task<TDocument?> FindOneAsync(
+            Expression<Func<TDocument, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Documents.AsQueryable().FirstOrDefault(predicate));
+        }
+
+        public Task<bool> ExistsAsync(
+            Expression<Func<TDocument, bool>> predicate,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Documents.AsQueryable().Any(predicate));
         }
 
         public Task<TDocument> CreateAsync(TDocument document, CancellationToken cancellationToken = default)
