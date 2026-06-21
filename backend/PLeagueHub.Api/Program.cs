@@ -23,6 +23,7 @@ builder.Services.Configure<FootApiSettings>(
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddSingleton<MongoIndexInitializer>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MongoRepository<>));
+builder.Services.AddScoped<IForumRepository, MongoForumRepository>();
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SearchService>();

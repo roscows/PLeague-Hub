@@ -21,6 +21,9 @@ public sealed class Post : BaseDocument
     [BsonElement("datumKreiranja")]
     public DateTime DatumKreiranja { get; set; } = DateTime.UtcNow;
 
+    [BsonElement("poslednjaAktivnost")]
+    public DateTime PoslednjaAktivnost { get; set; } = DateTime.MinValue;
+
     [BsonElement("obrisan")]
     public bool Obrisan { get; set; }
 

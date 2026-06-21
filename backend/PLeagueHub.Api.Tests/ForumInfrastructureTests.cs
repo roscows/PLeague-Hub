@@ -34,6 +34,12 @@ public sealed class ForumInfrastructureTests
         Assert.Equal("CommentVotes", settings.CommentVotesCollectionName);
     }
 
+    [Fact]
+    public void Post_DefaultLastActivity_SupportsLegacyDocuments()
+    {
+        Assert.Equal(DateTime.MinValue, new Post().PoslednjaAktivnost);
+    }
+
     private static string? GetBsonElementName(Type type, string propertyName)
     {
         return type
