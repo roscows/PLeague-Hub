@@ -5,6 +5,7 @@ public sealed record ForumTopicResponse(
     string Naslov,
     string AutorId,
     string AutorUsername,
+    string AutorUloga,
     int BrojOdgovora,
     DateTime DatumKreiranja,
     DateTime PoslednjaAktivnost,

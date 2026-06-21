@@ -33,6 +33,7 @@ public sealed class MongoForumRepository : IForumRepository
             .SortByDescending(post => post.Istaknut)
             .ThenByDescending(post => post.PoslednjaAktivnost)
             .ThenByDescending(post => post.DatumKreiranja)
+            .ThenByDescending(post => post.Id)
             .Skip(query.Skip)
             .Limit(query.PageSize)
             .ToListAsync(cancellationToken);

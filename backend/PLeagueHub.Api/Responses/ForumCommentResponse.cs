@@ -13,7 +13,10 @@ public sealed record ForumCommentResponse(
     int Broj,
     int Lajkovi,
     int Dislajkovi,
-    int? TrenutniGlas);
+    int? TrenutniGlas,
+    bool Istaknut,
+    DateTime? IstaknutAt,
+    string? IstakaoId);
 
 public sealed record ForumVoteResponse(
     string CommentId,

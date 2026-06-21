@@ -52,6 +52,7 @@ public sealed class ForumService : IForumService
                 post.Naslov,
                 post.AutorId,
                 Username(users, post.AutorId),
+                Role(users, post.AutorId),
                 postComments.Count,
                 post.DatumKreiranja,
                 latestActivity,
@@ -96,7 +97,7 @@ public sealed class ForumService : IForumService
             comments.Select(comment => comment.Id!).ToList(),
             cancellationToken);
 
-        return comments
+        return OrderDepthFirst(comments)
             .Select((comment, index) => MapComment(comment, index + 1, users, votes, currentUserId))
             .ToList();
     }
@@ -314,12 +315,63 @@ public sealed class ForumService : IForumService
             number,
             commentVotes.Count(vote => vote.Value == 1),
             commentVotes.Count(vote => vote.Value == -1),
-            commentVotes.SingleOrDefault(vote => vote.UserId == currentUserId)?.Value);
+            commentVotes.SingleOrDefault(vote => vote.UserId == currentUserId)?.Value,
+            comment.Istaknut,
+            comment.IstaknutAt,
+            comment.IstakaoId);
     }
 
     private static string Username(IReadOnlyDictionary<string, User> users, string userId)
     {
         return users.TryGetValue(userId, out var user) ? user.Username : UnknownUser;
+    }
+
+    private static string Role(IReadOnlyDictionary<string, User> users, string userId) =>
+        users.TryGetValue(userId, out var user) ? user.Uloga : "registrovani";
+
+    private static IReadOnlyList<Comment> OrderDepthFirst(IReadOnlyList<Comment> comments)
+    {
+        var sorted = comments
+            .OrderBy(comment => comment.DatumKreiranja)
+            .ThenBy(comment => comment.Id, StringComparer.Ordinal)
+            .ToList();
+        var byId = sorted
+            .Where(comment => comment.Id is not null)
+            .ToDictionary(comment => comment.Id!, StringComparer.Ordinal);
+        var children = sorted
+            .Where(comment => comment.ParentCommentId is not null)
+            .GroupBy(comment => comment.ParentCommentId!, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.ToList(), StringComparer.Ordinal);
+        var roots = sorted.Where(comment =>
+            comment.ParentCommentId is null || !byId.ContainsKey(comment.ParentCommentId));
+        var result = new List<Comment>(sorted.Count);
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+
+        void AppendSubtree(Comment start)
+        {
+            var stack = new Stack<Comment>();
+            stack.Push(start);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                var key = current.Id ?? $"missing:{result.Count}";
+                if (!visited.Add(key)) continue;
+                result.Add(current);
+
+                if (current.Id is null || !children.TryGetValue(current.Id, out var descendants)) continue;
+                for (var index = descendants.Count - 1; index >= 0; index--)
+                    stack.Push(descendants[index]);
+            }
+        }
+
+        foreach (var root in roots) AppendSubtree(root);
+        foreach (var remaining in sorted)
+        {
+            if (remaining.Id is null || !visited.Contains(remaining.Id)) AppendSubtree(remaining);
+        }
+
+        return result;
     }
 
     private async Task<string?> CheckWriteAccessAsync(string userId, CancellationToken cancellationToken)
