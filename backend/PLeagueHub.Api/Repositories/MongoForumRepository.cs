@@ -76,6 +76,26 @@ public sealed class MongoForumRepository : IForumRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Comment>> GetCommentsForPostsAsync(
+        IReadOnlyCollection<string> postIds,
+        CancellationToken cancellationToken = default)
+    {
+        var ids = postIds
+            .Where(id => ObjectId.TryParse(id, out _))
+            .Distinct()
+            .ToList();
+
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await _context.Comments
+            .Find(Builders<Comment>.Filter.In(comment => comment.PostId, ids))
+            .SortBy(comment => comment.DatumKreiranja)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<string, User>> GetUsersAsync(
         IReadOnlyCollection<string> userIds,
         CancellationToken cancellationToken = default)

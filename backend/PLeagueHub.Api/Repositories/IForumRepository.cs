@@ -28,6 +28,10 @@ public interface IForumRepository
 
     Task<IReadOnlyList<Comment>> GetCommentsAsync(string postId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Comment>> GetCommentsForPostsAsync(
+        IReadOnlyCollection<string> postIds,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyDictionary<string, User>> GetUsersAsync(
         IReadOnlyCollection<string> userIds,
         CancellationToken cancellationToken = default);
