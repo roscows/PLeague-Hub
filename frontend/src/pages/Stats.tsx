@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { playersApi } from '../services/playersApi';
 import { teamsApi } from '../services/teamsApi';
 import type { Player, Team } from '../types/api';
+import { TeamLogo } from '../components/TeamLogo';
 
 export function Stats() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -80,7 +81,7 @@ export function Stats() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <img className="size-6 object-contain" src={team?.logoUrl} alt="" />
+                        <TeamLogo className="size-6" logoUrl={team?.logoUrl} name={team?.naziv} />
                         <span className="text-xs font-semibold">{team?.skracenica ?? '-'}</span>
                       </div>
                     </td>

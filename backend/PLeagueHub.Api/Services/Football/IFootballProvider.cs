@@ -7,4 +7,13 @@ public interface IFootballProvider
     Task<JsonDocument> SearchAsync(
         string term,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballTeamStanding>> GetTeamStandingsAsync(
+        int tournamentId,
+        int seasonId,
+        CancellationToken cancellationToken = default);
+
+    Task<FootballTeamLogo> GetTeamLogoAsync(
+        int providerId,
+        CancellationToken cancellationToken = default);
 }

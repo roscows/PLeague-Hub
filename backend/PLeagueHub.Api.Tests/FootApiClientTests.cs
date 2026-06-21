@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -51,6 +52,87 @@ public sealed class FootApiClientTests
         Assert.Equal(0, requestCount);
     }
 
+    [Fact]
+    public async Task GetTeamStandingsAsync_MapsFootApiRows()
+    {
+        HttpRequestMessage? capturedRequest = null;
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            capturedRequest = request;
+            return JsonResponse("""
+                {"standings":[{"rows":[
+                  {"team":{"id":42,"name":"Arsenal","nameCode":"ARS"},"position":1,"points":85}
+                ]}]}
+                """);
+        });
+        var client = CreateClient(handler, apiKey: "test-key");
+
+        var standings = await client.GetTeamStandingsAsync(17, 76986);
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal(
+            "https://footapi7.p.rapidapi.com/api/tournament/17/season/76986/standings/total",
+            capturedRequest.RequestUri?.AbsoluteUri);
+        Assert.Equal("test-key", capturedRequest.Headers.GetValues("X-RapidAPI-Key").Single());
+        var arsenal = Assert.Single(standings);
+        Assert.Equal(42, arsenal.ProviderId);
+        Assert.Equal("Arsenal", arsenal.Name);
+        Assert.Equal("ARS", arsenal.Abbreviation);
+        Assert.Equal(1, arsenal.Position);
+        Assert.Equal(85, arsenal.Points);
+    }
+
+    [Fact]
+    public async Task GetTeamLogoAsync_ReturnsValidatedImageBytes()
+    {
+        HttpRequestMessage? capturedRequest = null;
+        var expectedBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            capturedRequest = request;
+            return ImageResponse(expectedBytes, "image/png");
+        });
+        var client = CreateClient(handler, apiKey: "test-key");
+
+        var logo = await client.GetTeamLogoAsync(60);
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal("https://footapi7.p.rapidapi.com/api/team/60/image", capturedRequest.RequestUri?.AbsoluteUri);
+        Assert.Equal("test-key", capturedRequest.Headers.GetValues("X-RapidAPI-Key").Single());
+        Assert.Equal("image/png", logo.ContentType);
+        Assert.Equal(expectedBytes, logo.Content);
+    }
+
+    [Fact]
+    public async Task GetTeamLogoAsync_RejectsNonImageContent()
+    {
+        var client = CreateClient(
+            new StubHttpMessageHandler(_ => ImageResponse([1, 2, 3], "text/html")),
+            apiKey: "test-key");
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => client.GetTeamLogoAsync(60));
+    }
+
+    [Fact]
+    public async Task GetTeamLogoAsync_RejectsEmptyContent()
+    {
+        var client = CreateClient(
+            new StubHttpMessageHandler(_ => ImageResponse([], "image/png")),
+            apiKey: "test-key");
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => client.GetTeamLogoAsync(60));
+    }
+
+    [Fact]
+    public async Task GetTeamLogoAsync_RejectsContentLargerThanOneMegabyte()
+    {
+        var client = CreateClient(
+            new StubHttpMessageHandler(_ => ImageResponse(new byte[1_048_577], "image/png")),
+            apiKey: "test-key");
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => client.GetTeamLogoAsync(60));
+    }
+
     private static FootApiClient CreateClient(HttpMessageHandler handler, string apiKey)
     {
         var httpClient = new HttpClient(handler)
@@ -65,6 +147,24 @@ public sealed class FootApiClientTests
         });
 
         return new FootApiClient(httpClient, settings);
+    }
+
+    private static HttpResponseMessage JsonResponse(string json)
+    {
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+    }
+
+    private static HttpResponseMessage ImageResponse(byte[] content, string contentType)
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(content)
+        };
+        response.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return response;
     }
 
     private sealed class StubHttpMessageHandler(

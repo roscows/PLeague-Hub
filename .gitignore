@@ -29,6 +29,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Runtime team-logo cache
+backend/PLeagueHub.Api/wwwroot/team-logos/*
+!backend/PLeagueHub.Api/wwwroot/team-logos/.gitkeep
+
 # OS files
 Thumbs.db
 .DS_Store

@@ -4,6 +4,10 @@ namespace PLeagueHub.Api.Models;
 
 public sealed class Team : BaseDocument
 {
+    [BsonElement("provider_id")]
+    [BsonIgnoreIfNull]
+    public int? ProviderId { get; set; }
+
     [BsonElement("naziv")]
     public string Naziv { get; set; } = string.Empty;
 

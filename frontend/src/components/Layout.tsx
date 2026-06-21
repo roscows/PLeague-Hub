@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { teamsApi } from '../services/teamsApi';
 import type { Team } from '../types/api';
 import { GlobalSearch } from './GlobalSearch';
+import { TeamLogo } from './TeamLogo';
 
 const navItems = [
   { to: '/', label: 'Pocetna', icon: Home },
@@ -136,7 +137,7 @@ export function Layout() {
               {teams.slice(0, 6).map((team) => (
                 <div key={team.id} className="grid grid-cols-[24px_28px_1fr_32px] items-center gap-2 border-b border-slate-100 py-2.5 last:border-0">
                   <span className="text-center text-xs font-bold text-slate-400">{team.pozicija}</span>
-                  <img className="size-6 object-contain" src={team.logoUrl} alt="" />
+                  <TeamLogo className="size-6" logoUrl={team.logoUrl} name={team.naziv} />
                   <span className="truncate text-xs font-semibold">{team.naziv}</span>
                   <span className="text-right text-xs font-black">{team.bodovi}</span>
                 </div>

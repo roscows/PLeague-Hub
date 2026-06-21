@@ -5,6 +5,7 @@ import { getApiErrorMessage } from '../services/apiError';
 import { debounce } from '../services/debounce';
 import { searchApi } from '../services/searchApi';
 import type { SearchResult } from '../types/api';
+import { TeamLogo } from './TeamLogo';
 
 export function GlobalSearch() {
   const [query, setQuery] = useState('');
@@ -125,7 +126,9 @@ export function GlobalSearch() {
                   to={`/stats?${result.type}Id=${result.id}`}
                 >
                   <span className="grid size-9 place-items-center rounded-md bg-slate-100">
-                    {result.imageUrl ? (
+                    {result.type === 'team' ? (
+                      <TeamLogo className="size-7" logoUrl={result.imageUrl} name={result.name} />
+                    ) : result.imageUrl ? (
                       <img className="size-7 object-contain" src={result.imageUrl} alt="" />
                     ) : result.type === 'player' ? (
                       <UserRound size={18} className="text-slate-500" />

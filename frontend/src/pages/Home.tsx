@@ -1,6 +1,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, Newspaper, Radio, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { MatchRow } from '../components/MatchRow';
+import { TeamLogo } from '../components/TeamLogo';
 import { healthApi } from '../services/healthApi';
 import { matchesApi } from '../services/matchesApi';
 import { newsApi } from '../services/newsApi';
@@ -119,7 +120,7 @@ export function Home() {
         {teams.map((team) => (
           <div key={team.id} className="grid grid-cols-[28px_32px_1fr_40px] items-center gap-2 border-b border-slate-100 px-4 py-2.5 last:border-0">
             <span className="text-xs font-bold text-slate-400">{team.pozicija}</span>
-            <img className="size-6 object-contain" src={team.logoUrl} alt="" />
+            <TeamLogo className="size-6" logoUrl={team.logoUrl} name={team.naziv} />
             <span className="truncate text-sm font-semibold">{team.naziv}</span>
             <span className="text-right text-sm font-black">{team.bodovi}</span>
           </div>

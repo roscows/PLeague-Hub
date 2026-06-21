@@ -1,4 +1,5 @@
 import type { Team } from '../types/api';
+import { TeamLogo } from './TeamLogo';
 
 interface TeamIdentityProps {
   team?: Team;
@@ -9,7 +10,11 @@ interface TeamIdentityProps {
 export function TeamIdentity({ team, align = 'left', compact = false }: TeamIdentityProps) {
   const content = (
     <>
-      <img className={`${compact ? 'size-5' : 'size-7'} shrink-0 object-contain`} src={team?.logoUrl} alt="" />
+      <TeamLogo
+        className={compact ? 'size-5' : 'size-7'}
+        logoUrl={team?.logoUrl}
+        name={team?.naziv}
+      />
       <span className="truncate font-semibold">{team?.naziv ?? 'Nepoznat tim'}</span>
     </>
   );

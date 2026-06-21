@@ -32,7 +32,15 @@ public sealed class MongoIndexInitializer
                 new CreateIndexOptions { Name = "idx_teams_pozicija" }),
             new CreateIndexModel<Team>(
                 Builders<Team>.IndexKeys.Ascending(team => team.Skracenica),
-                new CreateIndexOptions { Name = "idx_teams_skracenica" })
+                new CreateIndexOptions { Name = "idx_teams_skracenica" }),
+            new CreateIndexModel<Team>(
+                Builders<Team>.IndexKeys.Ascending(team => team.ProviderId),
+                new CreateIndexOptions
+                {
+                    Name = "idx_teams_provider_id",
+                    Unique = true,
+                    Sparse = true
+                })
         };
 
         await _context.Teams.Indexes.CreateManyAsync(indexes, cancellationToken);

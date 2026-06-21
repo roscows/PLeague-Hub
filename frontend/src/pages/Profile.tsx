@@ -4,6 +4,7 @@ import { teamsApi } from '../services/teamsApi';
 import { usersApi } from '../services/usersApi';
 import { useAuth } from '../contexts/AuthContext';
 import type { Team } from '../types/api';
+import { TeamLogo } from '../components/TeamLogo';
 
 export function Profile() {
   const { user, refreshProfile } = useAuth();
@@ -77,7 +78,7 @@ export function Profile() {
                 checked={selectedTeamIds.includes(team.id)}
                 onChange={() => toggleTeam(team.id)}
               />
-              <img className="size-7 object-contain" src={team.logoUrl} alt="" />
+              <TeamLogo className="size-7" logoUrl={team.logoUrl} name={team.naziv} />
               <span className="font-semibold">{team.naziv}</span>
             </label>
           ))}

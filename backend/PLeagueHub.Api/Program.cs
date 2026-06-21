@@ -26,8 +26,12 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(MongoRepository<>));
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SearchService>();
+builder.Services.AddScoped<TeamSyncService>();
+builder.Services.AddScoped<TeamLogoSyncService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<ITeamLogoCache, LocalTeamLogoCache>();
+builder.Services.AddSingleton<IProviderRequestPacer, ProviderRequestPacer>();
 builder.Services.AddHttpClient<IFootballProvider, FootApiClient>((serviceProvider, client) =>
 {
     var settings = serviceProvider
@@ -122,6 +126,7 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger";
 });
 
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();

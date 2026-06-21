@@ -14,7 +14,7 @@ Logo synchronization is an explicit administrator operation separate from standi
 
 `POST /api/integrations/football/sync/team-logos`
 
-The backend loads teams with a positive `ProviderId`, downloads missing logos through `IFootballProvider`, stores them under `wwwroot/team-logos/{providerId}.png`, and updates each team's `LogoUrl` to `/team-logos/{providerId}.png`. ASP.NET Core static-file middleware serves the cached files.
+The backend loads teams with a positive `ProviderId`, downloads missing logos through `IFootballProvider`, stores them under `wwwroot/team-logos/{providerId}.{extension}`, and updates each team's `LogoUrl` to the matching public path. ASP.NET Core static-file middleware serves the cached files.
 
 The frontend resolves API-relative asset paths against `VITE_API_BASE_URL`. Existing absolute URLs remain supported. A shared logo component displays a restrained fallback only after a missing or failed image is detected.
 
@@ -27,7 +27,7 @@ The client accepts only successful `image/*` responses no larger than 1 MB. Empt
 ## Cache Rules
 
 - Cache directory: `backend/PLeagueHub.Api/wwwroot/team-logos`
-- File name: positive numeric provider ID plus `.png`
+- File name: positive numeric provider ID plus `.png`, `.webp`, or `.jpg`, selected from the validated content type
 - Runtime PNG files are ignored by Git; a `.gitkeep` preserves the directory.
 - Existing non-empty cache files are skipped without a provider request.
 - Files are written to a temporary file in the same directory and atomically renamed after validation.

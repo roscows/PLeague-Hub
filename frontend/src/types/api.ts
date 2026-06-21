@@ -21,6 +21,7 @@ export interface UserProfile {
 
 export interface Team {
   id: string;
+  providerId?: number | null;
   naziv: string;
   skracenica: string;
   stadion: string;
