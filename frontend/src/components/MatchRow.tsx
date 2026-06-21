@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 import type { Match, Team } from '../types/api';
+import { RelativeTime } from './RelativeTime';
 import { TeamIdentity } from './TeamIdentity';
 
 interface MatchRowProps {
@@ -21,6 +22,7 @@ export function MatchRow({ match, teams }: MatchRowProps) {
         <p className={`mt-1 text-[10px] font-semibold uppercase ${played ? 'text-slate-400' : 'text-brand'}`}>
           {match.status}
         </p>
+        {played && match.zavrsenaAt && <RelativeTime className="mt-1 block text-[10px] normal-case text-slate-400" value={match.zavrsenaAt} />}
       </div>
 
       <div className="space-y-2">

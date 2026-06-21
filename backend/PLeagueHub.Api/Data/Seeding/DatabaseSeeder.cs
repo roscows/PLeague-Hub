@@ -40,13 +40,14 @@ public sealed class DatabaseSeeder
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
+        var seedNow = DateTime.UtcNow;
         await SeedCollectionAsync(_teamsRepository, CreateTeams(), cancellationToken);
         await SeedCollectionAsync(_playersRepository, CreatePlayers(), cancellationToken);
         await SeedCollectionAsync(_matchesRepository, CreateMatches(), cancellationToken);
         await SeedCollectionAsync(_statisticsRepository, CreateStatistics(), cancellationToken);
-        await SeedMissingDocumentsAsync(_postsRepository, CreatePosts(), cancellationToken);
+        await SeedMissingDocumentsAsync(_postsRepository, CreatePosts(seedNow), cancellationToken);
         await SeedUsersAsync(cancellationToken);
-        await SeedMissingDocumentsAsync(_commentsRepository, CreateComments(), cancellationToken);
+        await SeedMissingDocumentsAsync(_commentsRepository, CreateComments(seedNow), cancellationToken);
         await SeedMissingDocumentsAsync(_commentVotesRepository, CreateCommentVotes(), cancellationToken);
     }
 
@@ -341,7 +342,7 @@ public sealed class DatabaseSeeder
         ];
     }
 
-    private static IReadOnlyCollection<Post> CreatePosts()
+    private static IReadOnlyCollection<Post> CreatePosts(DateTime seedNow)
     {
         return
         [
@@ -352,8 +353,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Nova sezona Premier League startuje uz velike derbije",
                 Sadrzaj = "PLeague Hub prati rezultate, tabelu i statistiku igraca tokom cele sezone.",
                 Tip = "vest",
-                DatumKreiranja = new DateTime(2026, 8, 14, 10, 0, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 8, 14, 10, 0, 0, DateTimeKind.Utc),
+                DatumKreiranja = seedNow.AddDays(-7),
+                PoslednjaAktivnost = seedNow.AddDays(-7),
                 Obrisan = false
             },
             new Post
@@ -363,8 +364,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Ko je favorit za titulu ove sezone?",
                 Sadrzaj = "Diskutujte o formi klubova, transferima i prvim utiscima nakon uvodnih kola.",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 8, 17, 12, 30, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 8, 17, 14, 5, 0, DateTimeKind.Utc),
+                DatumKreiranja = seedNow.AddDays(-4),
+                PoslednjaAktivnost = seedNow.AddDays(-3).AddHours(-22),
                 Obrisan = false
             },
             new Post
@@ -374,8 +375,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Pravila Premier League foruma",
                 Sadrzaj = "Postujte sagovornike, drzite se teme i argumentujte svoje misljenje bez vredjanja.",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 20, 9, 0, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 20, 9, 15, 0, DateTimeKind.Utc),
+                DatumKreiranja = seedNow.AddHours(-26),
+                PoslednjaAktivnost = seedNow.AddHours(-25).AddMinutes(-45),
                 Istaknut = true
             },
             new Post
@@ -385,8 +386,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Ko osvaja Premier League sledece sezone?",
                 Sadrzaj = "Da li aktuelni favoriti ostaju na vrhu ili nas ceka iznenadjenje?",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 21, 8, 20, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 21, 10, 35, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-4),
+                PoslednjaAktivnost = seedNow.AddHours(-1).AddMinutes(-45)
             },
             new Post
             {
@@ -395,8 +396,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Najbolji transfer ovog leta",
                 Sadrzaj = "Koji klub je do sada uradio najbolji posao na trzistu?",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 21, 7, 45, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 21, 10, 5, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-4).AddMinutes(-35),
+                PoslednjaAktivnost = seedNow.AddHours(-1).AddMinutes(-55)
             },
             new Post
             {
@@ -405,8 +406,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Haaland ili Salah za kapitena?",
                 Sadrzaj = "Koga birate za prvo kolo fantasy sezone i zasto?",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 21, 6, 30, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 21, 6, 30, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-5).AddMinutes(-30),
+                PoslednjaAktivnost = seedNow.AddHours(-5).AddMinutes(-30)
             },
             new Post
             {
@@ -415,8 +416,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Najpotcenjeniji vezista lige",
                 Sadrzaj = "Ko radi najveci posao za ekipu, a ne dobija dovoljno paznje?",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 20, 22, 10, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 20, 22, 10, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-13).AddMinutes(-50),
+                PoslednjaAktivnost = seedNow.AddHours(-13).AddMinutes(-50)
             },
             new Post
             {
@@ -425,8 +426,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Prognoza prvog kola",
                 Sadrzaj = "Ostavite rezultate svih utakmica prvog kola.",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 20, 19, 40, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 20, 19, 40, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-16).AddMinutes(-20),
+                PoslednjaAktivnost = seedNow.AddHours(-16).AddMinutes(-20)
             },
             new Post
             {
@@ -435,8 +436,8 @@ public sealed class DatabaseSeeder
                 Naslov = "Koji stadion ima najbolju atmosferu?",
                 Sadrzaj = "Anfield, St James Park, Selhurst Park ili neko cetvrti?",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 20, 16, 15, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 20, 16, 15, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-19).AddMinutes(-45),
+                PoslednjaAktivnost = seedNow.AddHours(-19).AddMinutes(-45)
             },
             new Post
             {
@@ -445,13 +446,13 @@ public sealed class DatabaseSeeder
                 Naslov = "Mladi igraci koje treba pratiti",
                 Sadrzaj = "Predlozite igrace do 21 godine koji bi mogli da naprave iskorak.",
                 Tip = "diskusija",
-                DatumKreiranja = new DateTime(2026, 6, 20, 13, 0, 0, DateTimeKind.Utc),
-                PoslednjaAktivnost = new DateTime(2026, 6, 20, 13, 0, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-23),
+                PoslednjaAktivnost = seedNow.AddHours(-23)
             }
         ];
     }
 
-    private static IReadOnlyCollection<Comment> CreateComments()
+    private static IReadOnlyCollection<Comment> CreateComments(DateTime seedNow)
     {
         return
         [
@@ -461,7 +462,7 @@ public sealed class DatabaseSeeder
                 PostId = "665000000000000000000403",
                 AutorId = "665000000000000000000501",
                 Tekst = "Dobrodosli na forum. Kritika je dobrodosla, vredjanje nije.",
-                DatumKreiranja = new DateTime(2026, 6, 20, 9, 15, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-25).AddMinutes(-45)
             },
             new Comment
             {
@@ -469,7 +470,7 @@ public sealed class DatabaseSeeder
                 PostId = "665000000000000000000404",
                 AutorId = "665000000000000000000503",
                 Tekst = "Arsenal mi deluje najspremnije ako zadrzi kljucne igrace.",
-                DatumKreiranja = new DateTime(2026, 6, 21, 9, 0, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-3).AddMinutes(-20)
             },
             new Comment
             {
@@ -478,7 +479,7 @@ public sealed class DatabaseSeeder
                 AutorId = "665000000000000000000501",
                 ParentCommentId = "665000000000000000000602",
                 Tekst = "Slazem se za kontinuitet, ali City i dalje ima najdublji sastav.",
-                DatumKreiranja = new DateTime(2026, 6, 21, 9, 25, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-2).AddMinutes(-55)
             },
             new Comment
             {
@@ -487,7 +488,7 @@ public sealed class DatabaseSeeder
                 AutorId = "665000000000000000000503",
                 ParentCommentId = "665000000000000000000603",
                 Tekst = "Dubina je velika, ali ce i motivacija posle toliko sezona biti faktor.",
-                DatumKreiranja = new DateTime(2026, 6, 21, 10, 35, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-1).AddMinutes(-45)
             },
             new Comment
             {
@@ -495,7 +496,7 @@ public sealed class DatabaseSeeder
                 PostId = "665000000000000000000405",
                 AutorId = "665000000000000000000502",
                 Tekst = "Najbolji transfer nije uvek najskuplji, uklapanje u sistem je kljucno.",
-                DatumKreiranja = new DateTime(2026, 6, 21, 9, 40, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-2).AddMinutes(-40)
             },
             new Comment
             {
@@ -504,7 +505,7 @@ public sealed class DatabaseSeeder
                 AutorId = "665000000000000000000503",
                 ParentCommentId = "665000000000000000000605",
                 Tekst = "Tacno, posebno kod igraca koji odmah resavaju problem u prvih jedanaest.",
-                DatumKreiranja = new DateTime(2026, 6, 21, 10, 5, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddHours(-2).AddMinutes(-15)
             },
             new Comment
             {
@@ -512,7 +513,7 @@ public sealed class DatabaseSeeder
                 PostId = "665000000000000000000402",
                 AutorId = "665000000000000000000503",
                 Tekst = "Rani utisak mi je da ce borba trajati do poslednjih nekoliko kola.",
-                DatumKreiranja = new DateTime(2026, 8, 17, 14, 5, 0, DateTimeKind.Utc)
+                DatumKreiranja = seedNow.AddDays(-3).AddHours(-22)
             }
         ];
     }

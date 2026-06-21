@@ -14,7 +14,11 @@ function utcDay(value: Date) {
 
 export function formatRelativeTime(value: string | Date, now = new Date()) {
   const date = value instanceof Date ? value : new Date(value);
-  const differenceSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
+  const differenceMilliseconds = now.getTime() - date.getTime();
+
+  if (differenceMilliseconds < 0) return 'uskoro';
+
+  const differenceSeconds = Math.floor(differenceMilliseconds / 1000);
 
   if (differenceSeconds < 60) return 'pre nekoliko sekundi';
 

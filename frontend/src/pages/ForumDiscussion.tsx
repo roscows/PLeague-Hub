@@ -1,6 +1,7 @@
 import { MessageSquareReply } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { RelativeTime } from '../components/RelativeTime';
 import { ForumReplyForm } from '../components/forum/ForumReplyForm';
 import { ForumThread } from '../components/forum/ForumThread';
 import { ModerationModal } from '../components/forum/ModerationModal';
@@ -10,7 +11,6 @@ import { forumApi } from '../services/forumApi';
 import { moderationApi } from '../services/moderationApi';
 import type { CommentVoteValue, ForumComment, ForumCommentNode, ForumDiscussion, ModerationState } from '../types/api';
 import { buildCommentTree } from '../utils/forumTree';
-import { formatRelativeTime } from '../utils/relativeTime';
 
 export function ForumDiscussionPage() {
   const { id } = useParams();
@@ -165,7 +165,7 @@ export function ForumDiscussionPage() {
         </header>
         <p className="break-words whitespace-pre-wrap px-4 py-4 text-sm leading-6 text-slate-700">{discussion.sadrzaj}</p>
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-3 py-2 text-xs text-slate-500">
-          <time dateTime={discussion.datumKreiranja}>{formatRelativeTime(discussion.datumKreiranja)}</time>
+          <RelativeTime value={discussion.datumKreiranja} />
           <button
             className="flex items-center gap-1 rounded px-2 py-1 font-bold hover:bg-slate-100 hover:text-slate-900"
             onClick={() => {

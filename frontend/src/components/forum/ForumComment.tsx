@@ -1,6 +1,6 @@
 import { MessageSquareReply, Pin, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { CommentVoteValue, ForumCommentNode } from '../../types/api';
-import { formatRelativeTime } from '../../utils/relativeTime';
+import { RelativeTime } from '../RelativeTime';
 import { CommentActionsMenu } from './CommentActionsMenu';
 import { ForumReplyForm } from './ForumReplyForm';
 
@@ -102,9 +102,7 @@ export function ForumComment({
             >
               <ThumbsDown size={14} /> {comment.dislajkovi}
             </button>
-            <time className="w-full px-2 pt-1 text-[11px] text-slate-400 sm:ml-1 sm:w-auto sm:pt-0" dateTime={comment.datumKreiranja}>
-              {formatRelativeTime(comment.datumKreiranja)}
-            </time>
+            <RelativeTime className="w-full px-2 pt-1 text-[11px] text-slate-400 sm:ml-1 sm:w-auto sm:pt-0" value={comment.datumKreiranja} />
           </footer>
         )}
         {isReplying && (

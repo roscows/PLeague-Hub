@@ -71,6 +71,7 @@ export interface Match {
   golDomacin: number | null;
   golGost: number | null;
   status: string;
+  zavrsenaAt?: string | null;
 }
 
 export interface Post {

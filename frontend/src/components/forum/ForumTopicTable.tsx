@@ -2,7 +2,7 @@ import { Pin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { canModerateRole } from '../../services/authorization';
 import type { ForumTopic, Role } from '../../types/api';
-import { formatRelativeTime } from '../../utils/relativeTime';
+import { RelativeTime } from '../RelativeTime';
 
 interface ForumTopicTableProps {
   topics: ForumTopic[];
@@ -34,14 +34,14 @@ export function ForumTopicTable({ topics, currentRole, onTogglePin }: ForumTopic
                   <span className="truncate sm:whitespace-normal">{topic.naslov}</span>
                 </Link>
                 <span className="mt-1 block text-xs text-slate-500 sm:hidden">
-                  {topic.autorUsername} - {formatRelativeTime(topic.poslednjaAktivnost)}
+                  {topic.autorUsername} - <RelativeTime value={topic.poslednjaAktivnost} />
                 </span>
               </span>
               <span className="self-center text-right text-sm font-extrabold text-slate-700 sm:text-center">{topic.brojOdgovora}</span>
               <span className="hidden truncate text-sm font-semibold text-slate-600 sm:block">{topic.autorUsername}</span>
               <span className="hidden text-xs text-slate-500 sm:block">
                 <strong className="block truncate text-slate-700">{topic.poslednjiAutorUsername}</strong>
-                {formatRelativeTime(topic.poslednjaAktivnost)}
+                <RelativeTime value={topic.poslednjaAktivnost} />
               </span>
               {canPin ? (
                 <button

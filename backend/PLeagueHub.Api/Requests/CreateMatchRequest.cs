@@ -17,4 +17,6 @@ public sealed class CreateMatchRequest
     public int? GolGost { get; set; }
 
     public string Status { get; set; } = string.Empty;
+
+    public DateTime? ZavrsenaAt { get; set; }
 }

@@ -116,7 +116,8 @@ public sealed class MatchesController : ControllerBase
             Sezona = request.Sezona.Trim(),
             GolDomacin = request.GolDomacin,
             GolGost = request.GolGost,
-            Status = request.Status.Trim()
+            Status = request.Status.Trim(),
+            ZavrsenaAt = request.ZavrsenaAt
         };
 
         var createdMatch = await _matchesRepository.CreateAsync(match, cancellationToken);
@@ -154,6 +155,7 @@ public sealed class MatchesController : ControllerBase
         match.GolDomacin = request.GolDomacin;
         match.GolGost = request.GolGost;
         match.Status = request.Status.Trim();
+        match.ZavrsenaAt = request.ZavrsenaAt;
 
         var updated = await _matchesRepository.UpdateAsync(id, match, cancellationToken);
 

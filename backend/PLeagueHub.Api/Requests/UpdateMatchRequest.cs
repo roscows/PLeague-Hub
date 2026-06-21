@@ -13,4 +13,6 @@ public sealed record UpdateMatchRequest
     public int? GolGost { get; init; }
 
     public string Status { get; init; } = string.Empty;
+
+    public DateTime? ZavrsenaAt { get; init; }
 }
