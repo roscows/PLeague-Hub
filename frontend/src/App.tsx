@@ -6,6 +6,7 @@ import { ForumDiscussionPage } from './pages/ForumDiscussion';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { News } from './pages/News';
+import { NewsDetailPage } from './pages/NewsDetail';
 import { Profile } from './pages/Profile';
 import { Results } from './pages/Results';
 import { Stats } from './pages/Stats';
@@ -18,6 +19,7 @@ export function App() {
         <Route path="results" element={<Results />} />
         <Route path="stats" element={<Stats />} />
         <Route path="news" element={<News />} />
+        <Route path="news/:id" element={<NewsDetailPage />} />
         <Route path="forum" element={<Forum />} />
         <Route path="forum/:id" element={<ForumDiscussionPage />} />
         <Route path="login" element={<Login />} />
