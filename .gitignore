@@ -33,6 +33,15 @@ pnpm-debug.log*
 backend/PLeagueHub.Api/wwwroot/team-logos/*
 !backend/PLeagueHub.Api/wwwroot/team-logos/.gitkeep
 
+# Local tests (kept on disk, not committed)
+backend/PLeagueHub.Api.Tests/
+frontend/src/test/
+frontend/src/**/*.test.ts
+frontend/src/**/*.test.tsx
+
+# Superpowers visual brainstorming artifacts
+.superpowers/
+
 # OS files
 Thumbs.db
 .DS_Store
