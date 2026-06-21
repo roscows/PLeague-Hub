@@ -35,9 +35,11 @@ public sealed class Post : BaseDocument
     public string? SourceId { get; set; }
 
     [BsonElement("originalUrl")]
+    [BsonIgnoreIfNull]
     public string? OriginalUrl { get; set; }
 
     [BsonElement("externalId")]
+    [BsonIgnoreIfNull]
     public string? ExternalId { get; set; }
 
     [BsonElement("externalAuthor")]
@@ -50,6 +52,7 @@ public sealed class Post : BaseDocument
     public string? Pouzdanost { get; set; }
 
     [BsonElement("fingerprint")]
+    [BsonIgnoreIfNull]
     public string? Fingerprint { get; set; }
 
     [BsonElement("publishedAt")]

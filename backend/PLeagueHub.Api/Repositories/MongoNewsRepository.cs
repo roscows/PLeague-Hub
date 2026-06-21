@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using PLeagueHub.Api.Data;
 using PLeagueHub.Api.Models;
@@ -43,10 +44,13 @@ public sealed class MongoNewsRepository : INewsRepository
             .ToListAsync(cancellationToken);
     }
 
-    public Task<Post?> GetVisibleAsync(string id, CancellationToken cancellationToken = default) =>
-        _context.Posts
+    public Task<Post?> GetVisibleAsync(string id, CancellationToken cancellationToken = default)
+    {
+        if (!ObjectId.TryParse(id, out _)) return Task.FromResult<Post?>(null);
+        return _context.Posts
             .Find(post => post.Id == id && post.Tip == "vest" && !post.Obrisan)
             .FirstOrDefaultAsync(cancellationToken)!;
+    }
 
     public async Task<Post?> FindDuplicateAsync(
         string? externalId,
@@ -119,8 +123,11 @@ public sealed class MongoNewsRepository : INewsRepository
         CancellationToken cancellationToken = default) =>
         await _context.NewsSources.Find(_ => true).SortBy(source => source.Naziv).ToListAsync(cancellationToken);
 
-    public Task<NewsSource?> GetSourceAsync(string id, CancellationToken cancellationToken = default) =>
-        _context.NewsSources.Find(source => source.Id == id).FirstOrDefaultAsync(cancellationToken)!;
+    public Task<NewsSource?> GetSourceAsync(string id, CancellationToken cancellationToken = default)
+    {
+        if (!ObjectId.TryParse(id, out _)) return Task.FromResult<NewsSource?>(null);
+        return _context.NewsSources.Find(source => source.Id == id).FirstOrDefaultAsync(cancellationToken)!;
+    }
 
     public async Task<NewsSource> CreateSourceAsync(
         NewsSource source,

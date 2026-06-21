@@ -36,6 +36,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddScoped<INewsIngestionService, NewsIngestionService>();
 builder.Services.AddSingleton<NewsRelevanceFilter>();
