@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
   CalendarDays,
@@ -11,7 +11,7 @@ import {
   Trophy,
   UserCircle
 } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { teamsApi } from '../services/teamsApi';
 import type { Team } from '../types/api';
@@ -29,12 +29,18 @@ const navItems = [
 ];
 
 export function Layout() {
+  const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
+  const activeMobileNavRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     teamsApi.list().then(setTeams).catch(() => setTeams([]));
   }, []);
+
+  useEffect(() => {
+    activeMobileNavRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-surface text-slate-900">
@@ -86,6 +92,7 @@ export function Layout() {
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
+              ref={location.pathname === to || (to !== '/' && location.pathname.startsWith(`${to}/`)) ? activeMobileNavRef : undefined}
               to={to}
               className={({ isActive }) =>
                 `flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold ${
