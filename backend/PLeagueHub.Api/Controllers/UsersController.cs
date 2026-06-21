@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PLeagueHub.Api.Models;
 using PLeagueHub.Api.Repositories;
@@ -82,5 +84,96 @@ public sealed class UsersController : ControllerBase
             DatumReg = user.DatumReg,
             FavoritniTimovi = user.FavoritniTimovi
         });
+    }
+
+    [Authorize]
+    [HttpGet("users/me")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileResponse>> GetCurrentUserAsync(
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _usersRepository.GetByIdAsync(userId, cancellationToken);
+
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToProfileResponse(user));
+    }
+
+    [Authorize]
+    [HttpPut("users/me/favorite-teams")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileResponse>> UpdateFavoriteTeamsAsync(
+        UpdateFavoriteTeamsRequest request,
+        [FromServices] IRepository<Team> teamsRepository,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _usersRepository.GetByIdAsync(userId, cancellationToken);
+
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        var teamIds = request.TeamIds
+            .Where(teamId => !string.IsNullOrWhiteSpace(teamId))
+            .Select(teamId => teamId.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        foreach (var teamId in teamIds)
+        {
+            var team = await teamsRepository.GetByIdAsync(teamId, cancellationToken);
+
+            if (team is null)
+            {
+                return BadRequest(new { message = $"Team '{teamId}' does not exist." });
+            }
+        }
+
+        user.FavoritniTimovi = teamIds;
+        var updated = await _usersRepository.UpdateAsync(userId, user, cancellationToken);
+
+        if (!updated)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToProfileResponse(user));
+    }
+
+    private static UserProfileResponse ToProfileResponse(User user)
+    {
+        return new UserProfileResponse
+        {
+            UserId = user.Id ?? string.Empty,
+            Username = user.Username,
+            Email = user.Email,
+            Uloga = user.Uloga,
+            Aktivan = user.Aktivan,
+            DatumReg = user.DatumReg,
+            FavoritniTimovi = user.FavoritniTimovi
+        };
     }
 }

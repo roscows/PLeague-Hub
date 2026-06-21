@@ -1,5 +1,6 @@
 using PLeagueHub.Api.Models;
 using PLeagueHub.Api.Repositories;
+using PLeagueHub.Api.Services;
 
 namespace PLeagueHub.Api.Data.Seeding;
 
@@ -10,19 +11,25 @@ public sealed class DatabaseSeeder
     private readonly IRepository<Post> _postsRepository;
     private readonly IRepository<Statistic> _statisticsRepository;
     private readonly IRepository<Team> _teamsRepository;
+    private readonly IRepository<User> _usersRepository;
+    private readonly IPasswordService _passwordService;
 
     public DatabaseSeeder(
         IRepository<Team> teamsRepository,
         IRepository<Player> playersRepository,
         IRepository<Match> matchesRepository,
         IRepository<Statistic> statisticsRepository,
-        IRepository<Post> postsRepository)
+        IRepository<Post> postsRepository,
+        IRepository<User> usersRepository,
+        IPasswordService passwordService)
     {
         _teamsRepository = teamsRepository;
         _playersRepository = playersRepository;
         _matchesRepository = matchesRepository;
         _statisticsRepository = statisticsRepository;
         _postsRepository = postsRepository;
+        _usersRepository = usersRepository;
+        _passwordService = passwordService;
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -32,6 +39,25 @@ public sealed class DatabaseSeeder
         await SeedCollectionAsync(_matchesRepository, CreateMatches(), cancellationToken);
         await SeedCollectionAsync(_statisticsRepository, CreateStatistics(), cancellationToken);
         await SeedCollectionAsync(_postsRepository, CreatePosts(), cancellationToken);
+        await SeedUsersAsync(cancellationToken);
+    }
+
+    private async Task SeedUsersAsync(CancellationToken cancellationToken)
+    {
+        foreach (var user in CreateUsers())
+        {
+            var exists = await _usersRepository.ExistsAsync(
+                existingUser => existingUser.Email == user.Email || existingUser.Username == user.Username,
+                cancellationToken);
+
+            if (exists)
+            {
+                continue;
+            }
+
+            user.PasswordHash = _passwordService.HashPassword(user, "PLeague123!");
+            await _usersRepository.CreateAsync(user, cancellationToken);
+        }
     }
 
     private static async Task SeedCollectionAsync<TDocument>(
@@ -311,6 +337,47 @@ public sealed class DatabaseSeeder
                 Tip = "diskusija",
                 DatumKreiranja = new DateTime(2026, 8, 17, 12, 30, 0, DateTimeKind.Utc),
                 Obrisan = false
+            }
+        ];
+    }
+
+    private static IReadOnlyCollection<User> CreateUsers()
+    {
+        return
+        [
+            new User
+            {
+                Id = "665000000000000000000501",
+                Username = "admin",
+                Email = "admin@pleaguehub.local",
+                Uloga = "administrator",
+                Aktivan = true,
+                DatumReg = new DateTime(2026, 8, 1, 9, 0, 0, DateTimeKind.Utc),
+                FavoritniTimovi = []
+            },
+            new User
+            {
+                Id = "665000000000000000000502",
+                Username = "moderator",
+                Email = "moderator@pleaguehub.local",
+                Uloga = "moderator",
+                Aktivan = true,
+                DatumReg = new DateTime(2026, 8, 1, 9, 5, 0, DateTimeKind.Utc),
+                FavoritniTimovi = []
+            },
+            new User
+            {
+                Id = "665000000000000000000503",
+                Username = "fan",
+                Email = "user@pleaguehub.local",
+                Uloga = "registrovani",
+                Aktivan = true,
+                DatumReg = new DateTime(2026, 8, 1, 9, 10, 0, DateTimeKind.Utc),
+                FavoritniTimovi =
+                [
+                    "665000000000000000000001",
+                    "665000000000000000000002"
+                ]
             }
         ];
     }

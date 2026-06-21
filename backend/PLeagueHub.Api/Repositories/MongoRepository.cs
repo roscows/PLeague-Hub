@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using PLeagueHub.Api.Data;
 using PLeagueHub.Api.Models;
@@ -24,6 +25,11 @@ public sealed class MongoRepository<TDocument> : IRepository<TDocument>
 
     public async Task<TDocument?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
+        if (!IsValidObjectId(id))
+        {
+            return null;
+        }
+
         return await _collection
             .Find(document => document.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -55,6 +61,11 @@ public sealed class MongoRepository<TDocument> : IRepository<TDocument>
 
     public async Task<bool> UpdateAsync(string id, TDocument document, CancellationToken cancellationToken = default)
     {
+        if (!IsValidObjectId(id))
+        {
+            return false;
+        }
+
         document.Id = id;
 
         var result = await _collection.ReplaceOneAsync(
@@ -62,15 +73,25 @@ public sealed class MongoRepository<TDocument> : IRepository<TDocument>
             document,
             cancellationToken: cancellationToken);
 
-        return result.IsAcknowledged && result.ModifiedCount > 0;
+        return result.IsAcknowledged && result.MatchedCount > 0;
     }
 
     public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
+        if (!IsValidObjectId(id))
+        {
+            return false;
+        }
+
         var result = await _collection.DeleteOneAsync(
             document => document.Id == id,
             cancellationToken);
 
         return result.IsAcknowledged && result.DeletedCount > 0;
+    }
+
+    private static bool IsValidObjectId(string id)
+    {
+        return ObjectId.TryParse(id, out _);
     }
 }

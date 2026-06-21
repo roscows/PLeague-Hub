@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using PLeagueHub.Api.Data.Seeding;
 using PLeagueHub.Api.Models;
 using PLeagueHub.Api.Repositories;
+using PLeagueHub.Api.Services;
 
 namespace PLeagueHub.Api.Tests;
 
@@ -15,8 +16,9 @@ public sealed class DatabaseSeederTests
         var matches = new FakeRepository<Match>();
         var statistics = new FakeRepository<Statistic>();
         var posts = new FakeRepository<Post>();
+        var users = new FakeRepository<User>();
 
-        var seeder = new DatabaseSeeder(teams, players, matches, statistics, posts);
+        var seeder = new DatabaseSeeder(teams, players, matches, statistics, posts, users, new PasswordService());
 
         await seeder.SeedAsync();
 
@@ -25,6 +27,10 @@ public sealed class DatabaseSeederTests
         Assert.True(matches.Documents.Count >= 3);
         Assert.True(statistics.Documents.Count >= 3);
         Assert.True(posts.Documents.Count >= 2);
+        Assert.True(users.Documents.Count >= 3);
+        Assert.Contains(users.Documents, user => user.Email == "admin@pleaguehub.local" && user.Uloga == "administrator");
+        Assert.Contains(users.Documents, user => user.Email == "moderator@pleaguehub.local" && user.Uloga == "moderator");
+        Assert.All(users.Documents, user => Assert.False(string.IsNullOrWhiteSpace(user.PasswordHash)));
     }
 
     [Fact]
@@ -35,8 +41,9 @@ public sealed class DatabaseSeederTests
         var matches = new FakeRepository<Match>();
         var statistics = new FakeRepository<Statistic>();
         var posts = new FakeRepository<Post>();
+        var users = new FakeRepository<User>();
 
-        var seeder = new DatabaseSeeder(teams, players, matches, statistics, posts);
+        var seeder = new DatabaseSeeder(teams, players, matches, statistics, posts, users, new PasswordService());
 
         await seeder.SeedAsync();
         await seeder.SeedAsync();
@@ -46,6 +53,7 @@ public sealed class DatabaseSeederTests
         Assert.Equal(3, matches.Documents.Count);
         Assert.Equal(3, statistics.Documents.Count);
         Assert.Equal(2, posts.Documents.Count);
+        Assert.Equal(3, users.Documents.Count);
     }
 
     private sealed class FakeRepository<TDocument> : IRepository<TDocument>

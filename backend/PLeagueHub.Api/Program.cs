@@ -7,6 +7,9 @@ using PLeagueHub.Api.Data;
 using PLeagueHub.Api.Data.Seeding;
 using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Services;
+using PLeagueHub.Api.Services.Football;
+
+const string FrontendCorsPolicy = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,16 +17,40 @@ builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDb"));
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<FootApiSettings>(
+    builder.Configuration.GetSection("FootApi"));
 
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddSingleton<MongoIndexInitializer>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MongoRepository<>));
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<SearchService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+builder.Services.AddHttpClient<IFootballProvider, FootApiClient>((serviceProvider, client) =>
+{
+    var settings = serviceProvider
+        .GetRequiredService<Microsoft.Extensions.Options.IOptions<FootApiSettings>>()
+        .Value;
+    client.BaseAddress = new Uri(settings.BaseUrl);
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddCors(options =>
+{
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? [];
+
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -96,6 +123,7 @@ app.UseSwaggerUI(options =>
 });
 
 app.UseHttpsRedirection();
+app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
