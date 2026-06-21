@@ -50,6 +50,8 @@ Redesign the PLeague Hub forum around the dense, readable structure of the HLTV 
 
 Add nullable `ParentCommentId` to `Comment`. Existing comments remain root-level comments because the field is absent or null.
 
+Add `Istaknut` to `Post` so seeded system topics such as forum rules can be sorted and styled explicitly. This phase does not add moderator controls for changing that value.
+
 ### CommentVotes collection
 
 Add a `CommentVote` model and MongoDB collection with:
