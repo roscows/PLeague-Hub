@@ -33,6 +33,8 @@ public sealed class MongoContext
         Comments = Database.GetCollection<Comment>(settings.CommentsCollectionName);
         CommentVotes = Database.GetCollection<CommentVote>(settings.CommentVotesCollectionName);
         ModerationActions = Database.GetCollection<ModerationAction>(settings.ModerationActionsCollectionName);
+        NewsSources = Database.GetCollection<NewsSource>(settings.NewsSourcesCollectionName);
+        EditorialAuditEvents = Database.GetCollection<EditorialAuditEvent>(settings.EditorialAuditEventsCollectionName);
     }
 
     public IMongoDatabase Database { get; }
@@ -55,6 +57,10 @@ public sealed class MongoContext
 
     public IMongoCollection<ModerationAction> ModerationActions { get; }
 
+    public IMongoCollection<NewsSource> NewsSources { get; }
+
+    public IMongoCollection<EditorialAuditEvent> EditorialAuditEvents { get; }
+
     public IMongoCollection<TDocument> GetCollection<TDocument>()
         where TDocument : BaseDocument
     {
@@ -69,6 +75,8 @@ public sealed class MongoContext
             var type when type == typeof(Comment) => (IMongoCollection<TDocument>)Comments,
             var type when type == typeof(CommentVote) => (IMongoCollection<TDocument>)CommentVotes,
             var type when type == typeof(ModerationAction) => (IMongoCollection<TDocument>)ModerationActions,
+            var type when type == typeof(NewsSource) => (IMongoCollection<TDocument>)NewsSources,
+            var type when type == typeof(EditorialAuditEvent) => (IMongoCollection<TDocument>)EditorialAuditEvents,
             _ => throw new InvalidOperationException(
                 $"Mongo collection is not configured for document type {typeof(TDocument).Name}.")
         };

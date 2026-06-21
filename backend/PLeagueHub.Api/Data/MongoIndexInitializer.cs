@@ -23,6 +23,8 @@ public sealed class MongoIndexInitializer
         await CreateCommentIndexesAsync(cancellationToken);
         await CreateCommentVoteIndexesAsync(cancellationToken);
         await CreateModerationActionIndexesAsync(cancellationToken);
+        await CreateNewsSourceIndexesAsync(cancellationToken);
+        await CreateEditorialAuditEventIndexesAsync(cancellationToken);
     }
 
     private async Task CreateTeamIndexesAsync(CancellationToken cancellationToken)
@@ -128,7 +130,22 @@ public sealed class MongoIndexInitializer
                 new CreateIndexOptions { Name = "idx_posts_tip_obrisan_datumKreiranja" }),
             new CreateIndexModel<Post>(
                 Builders<Post>.IndexKeys.Ascending(post => post.AutorId),
-                new CreateIndexOptions { Name = "idx_posts_autorId" })
+                new CreateIndexOptions { Name = "idx_posts_autorId" }),
+            new CreateIndexModel<Post>(
+                Builders<Post>.IndexKeys
+                    .Ascending(post => post.Tip)
+                    .Descending(post => post.PublishedAt)
+                    .Descending(post => post.Id),
+                new CreateIndexOptions { Name = "idx_posts_tip_publishedAt_id" }),
+            new CreateIndexModel<Post>(
+                Builders<Post>.IndexKeys.Ascending(post => post.OriginalUrl),
+                new CreateIndexOptions { Name = "uq_posts_originalUrl", Unique = true, Sparse = true }),
+            new CreateIndexModel<Post>(
+                Builders<Post>.IndexKeys.Ascending(post => post.ExternalId),
+                new CreateIndexOptions { Name = "uq_posts_externalId", Unique = true, Sparse = true }),
+            new CreateIndexModel<Post>(
+                Builders<Post>.IndexKeys.Ascending(post => post.Fingerprint),
+                new CreateIndexOptions { Name = "idx_posts_fingerprint", Sparse = true })
         };
 
         await _context.Posts.Indexes.CreateManyAsync(indexes, cancellationToken);
@@ -193,5 +210,37 @@ public sealed class MongoIndexInitializer
         };
 
         await _context.ModerationActions.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateNewsSourceIndexesAsync(CancellationToken cancellationToken)
+    {
+        var indexes = new[]
+        {
+            new CreateIndexModel<NewsSource>(
+                Builders<NewsSource>.IndexKeys
+                    .Ascending(source => source.Aktivan)
+                    .Ascending(source => source.PoslednjaProveraAt),
+                new CreateIndexOptions { Name = "idx_newsSources_aktivan_poslednjaProveraAt" }),
+            new CreateIndexModel<NewsSource>(
+                Builders<NewsSource>.IndexKeys.Ascending(source => source.FeedUrl),
+                new CreateIndexOptions { Name = "uq_newsSources_feedUrl", Unique = true })
+        };
+
+        await _context.NewsSources.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateEditorialAuditEventIndexesAsync(CancellationToken cancellationToken)
+    {
+        var indexes = new[]
+        {
+            new CreateIndexModel<EditorialAuditEvent>(
+                Builders<EditorialAuditEvent>.IndexKeys
+                    .Ascending(audit => audit.TargetType)
+                    .Ascending(audit => audit.TargetId)
+                    .Descending(audit => audit.Datum),
+                new CreateIndexOptions { Name = "idx_editorialAudit_target_datum" })
+        };
+
+        await _context.EditorialAuditEvents.Indexes.CreateManyAsync(indexes, cancellationToken);
     }
 }

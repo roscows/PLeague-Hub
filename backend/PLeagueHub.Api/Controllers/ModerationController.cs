@@ -126,7 +126,7 @@ public sealed class ModerationController : ControllerBase
     {
         var post = await _repository.GetPostAsync(id, cancellationToken);
         if (post is null || post.Obrisan) return NotFound();
-        if (!await CanModerateAsync(post.AutorId, cancellationToken))
+        if (post.AutorId is not null && !await CanModerateAsync(post.AutorId, cancellationToken))
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Nemate dozvolu da moderirate ovu temu." });
 
         var updated = delete

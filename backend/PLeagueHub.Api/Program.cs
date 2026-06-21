@@ -20,9 +20,12 @@ builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<FootApiSettings>(
     builder.Configuration.GetSection("FootApi"));
+builder.Services.Configure<NewsIngestionSettings>(
+    builder.Configuration.GetSection("NewsIngestion"));
 
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddSingleton<MongoIndexInitializer>();
+builder.Services.AddSingleton<NewsMetadataMigration>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MongoRepository<>));
 builder.Services.AddScoped<IForumRepository, MongoForumRepository>();
 builder.Services.AddScoped<IModerationRepository, MongoModerationRepository>();
@@ -112,6 +115,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+await MigrateNewsMetadataAsync(app.Services);
 await EnsureMongoIndexesAsync(app.Services);
 
 if (args.Contains("--seed", StringComparer.OrdinalIgnoreCase)
@@ -153,6 +157,12 @@ static async Task EnsureMongoIndexesAsync(IServiceProvider serviceProvider)
 {
     var indexInitializer = serviceProvider.GetRequiredService<MongoIndexInitializer>();
     await indexInitializer.EnsureIndexesAsync();
+}
+
+static async Task MigrateNewsMetadataAsync(IServiceProvider serviceProvider)
+{
+    var migration = serviceProvider.GetRequiredService<NewsMetadataMigration>();
+    await migration.MigrateAsync();
 }
 
 public partial class Program;

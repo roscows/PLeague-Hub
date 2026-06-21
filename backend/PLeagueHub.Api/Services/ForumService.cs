@@ -33,6 +33,8 @@ public sealed class ForumService : IForumService
         var displayComments = SelectDisplayComments(comments);
         var userIds = page.Items.Select(post => post.AutorId)
             .Concat(displayComments.Select(comment => comment.AutorId))
+            .Where(userId => userId is not null)
+            .Cast<string>()
             .Distinct()
             .ToList();
         var users = await _repository.GetUsersAsync(userIds, cancellationToken);
@@ -50,13 +52,13 @@ public sealed class ForumService : IForumService
             return new ForumTopicResponse(
                 post.Id!,
                 post.Naslov,
-                post.AutorId,
-                Username(users, post.AutorId),
-                Role(users, post.AutorId),
+                post.AutorId!,
+                Username(users, post.AutorId!),
+                Role(users, post.AutorId!),
                 postComments.Count,
                 post.DatumKreiranja,
                 latestActivity,
-                latestComment is null ? Username(users, post.AutorId) : Username(users, latestComment.AutorId),
+                latestComment is null ? Username(users, post.AutorId!) : Username(users, latestComment.AutorId),
                 post.Istaknut);
         }).ToList();
 
@@ -70,7 +72,7 @@ public sealed class ForumService : IForumService
     {
         var post = await _repository.GetVisibleDiscussionAsync(id, cancellationToken);
 
-        if (post is null)
+        if (post is null || post.AutorId is null)
         {
             return null;
         }
@@ -281,12 +283,12 @@ public sealed class ForumService : IForumService
         Post post,
         IReadOnlyDictionary<string, User> users)
     {
-        users.TryGetValue(post.AutorId, out var author);
+        users.TryGetValue(post.AutorId!, out var author);
         return new ForumDiscussionResponse(
             post.Id!,
             post.Naslov,
             post.Sadrzaj,
-            post.AutorId,
+            post.AutorId!,
             author?.Username ?? UnknownUser,
             author?.Uloga ?? "registrovani",
             post.DatumKreiranja,
