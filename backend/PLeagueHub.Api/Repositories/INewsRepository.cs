@@ -46,6 +46,20 @@ public interface INewsRepository
         NewsSource source,
         CancellationToken cancellationToken = default);
 
+    Task MarkSourceSuccessAsync(
+        string id,
+        DateTime checkedAt,
+        string? etag,
+        DateTimeOffset? lastModified,
+        CancellationToken cancellationToken = default);
+
+    Task MarkSourceFailureAsync(
+        string id,
+        DateTime checkedAt,
+        string reason,
+        int pauseAfter,
+        CancellationToken cancellationToken = default);
+
     Task RecordAuditAsync(
         EditorialAuditEvent auditEvent,
         CancellationToken cancellationToken = default);

@@ -143,6 +143,68 @@ public sealed class MongoNewsRepository : INewsRepository
         return result.MatchedCount > 0;
     }
 
+    public Task MarkSourceSuccessAsync(
+        string id,
+        DateTime checkedAt,
+        string? etag,
+        DateTimeOffset? lastModified,
+        CancellationToken cancellationToken = default)
+    {
+        var update = Builders<NewsSource>.Update
+            .Set(source => source.UzastopneGreske, 0)
+            .Set(source => source.PoslednjaProveraAt, checkedAt)
+            .Set(source => source.PoslednjiUspehAt, checkedAt)
+            .Set(source => source.Etag, etag)
+            .Set(source => source.LastModified, lastModified)
+            .Set(source => source.UpdatedAt, checkedAt);
+        return _context.NewsSources.UpdateOneAsync(
+            source => source.Id == id,
+            update,
+            cancellationToken: cancellationToken);
+    }
+
+    public Task MarkSourceFailureAsync(
+        string id,
+        DateTime checkedAt,
+        string reason,
+        int pauseAfter,
+        CancellationToken cancellationToken = default)
+    {
+        var pauseReason = $"Automatski pauziran nakon tri uzastopne greske. Poslednja greska: {reason}";
+        var update = new[]
+        {
+            new MongoDB.Bson.BsonDocument("$set", new MongoDB.Bson.BsonDocument
+            {
+                ["poslednjaProveraAt"] = checkedAt,
+                ["uzastopneGreske"] = new MongoDB.Bson.BsonDocument("$add", new MongoDB.Bson.BsonArray
+                {
+                    new MongoDB.Bson.BsonDocument("$ifNull", new MongoDB.Bson.BsonArray { "$uzastopneGreske", 0 }),
+                    1
+                }),
+                ["updatedAt"] = checkedAt
+            }),
+            new MongoDB.Bson.BsonDocument("$set", new MongoDB.Bson.BsonDocument
+            {
+                ["aktivan"] = new MongoDB.Bson.BsonDocument("$cond", new MongoDB.Bson.BsonArray
+                {
+                    new MongoDB.Bson.BsonDocument("$gte", new MongoDB.Bson.BsonArray { "$uzastopneGreske", pauseAfter }),
+                    false,
+                    "$aktivan"
+                }),
+                ["pauziranRazlog"] = new MongoDB.Bson.BsonDocument("$cond", new MongoDB.Bson.BsonArray
+                {
+                    new MongoDB.Bson.BsonDocument("$gte", new MongoDB.Bson.BsonArray { "$uzastopneGreske", pauseAfter }),
+                    pauseReason,
+                    "$pauziranRazlog"
+                })
+            })
+        };
+        return _context.NewsSources.UpdateOneAsync(
+            source => source.Id == id,
+            new PipelineUpdateDefinition<NewsSource>(update),
+            cancellationToken: cancellationToken);
+    }
+
     public Task RecordAuditAsync(
         EditorialAuditEvent auditEvent,
         CancellationToken cancellationToken = default) =>
