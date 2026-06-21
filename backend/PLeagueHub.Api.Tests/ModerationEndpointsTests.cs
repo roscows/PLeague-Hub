@@ -44,16 +44,17 @@ public sealed class ModerationEndpointsTests
     [Fact]
     public async Task DeletePost_SoftDeletesPost_WhenUserIsModerator()
     {
-        using var factory = CreateFactory();
+        var postsRepository = CreatePostsRepository();
+        using var factory = CreateFactory(postsRepository);
         var client = CreateAuthenticatedClient(factory, "moderator");
 
         var response = await client.DeleteAsync("/api/moderation/posts/discussion-1");
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        var discussions = await client.GetFromJsonAsync<List<Post>>("/api/forum");
-        Assert.NotNull(discussions);
-        Assert.DoesNotContain(discussions, post => post.Id == "discussion-1");
+        var deletedPost = await postsRepository.GetByIdAsync("discussion-1");
+        Assert.NotNull(deletedPost);
+        Assert.True(deletedPost.Obrisan);
     }
 
     [Fact]
@@ -103,7 +104,8 @@ public sealed class ModerationEndpointsTests
         return client;
     }
 
-    private static WebApplicationFactory<Program> CreateFactory()
+    private static WebApplicationFactory<Program> CreateFactory(
+        FakeRepository<Post>? postsRepository = null)
     {
         return new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -113,19 +115,7 @@ public sealed class ModerationEndpointsTests
                     services.RemoveAll<IRepository<Post>>();
                     services.RemoveAll<IRepository<User>>();
 
-                    services.AddSingleton<IRepository<Post>>(new FakeRepository<Post>(
-                    [
-                        new Post
-                        {
-                            Id = "discussion-1",
-                            AutorId = "665000000000000000000501",
-                            Naslov = "Tema za moderaciju",
-                            Sadrzaj = "Ova tema ce biti uklonjena.",
-                            Tip = "diskusija",
-                            DatumKreiranja = new DateTime(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc),
-                            Obrisan = false
-                        }
-                    ]));
+                    services.AddSingleton<IRepository<Post>>(postsRepository ?? CreatePostsRepository());
 
                     services.AddSingleton<IRepository<User>>(new FakeRepository<User>(
                     [
@@ -143,6 +133,23 @@ public sealed class ModerationEndpointsTests
                     ]));
                 });
             });
+    }
+
+    private static FakeRepository<Post> CreatePostsRepository()
+    {
+        return new FakeRepository<Post>(
+        [
+            new Post
+            {
+                Id = "discussion-1",
+                AutorId = "665000000000000000000501",
+                Naslov = "Tema za moderaciju",
+                Sadrzaj = "Ova tema ce biti uklonjena.",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc),
+                Obrisan = false
+            }
+        ]);
     }
 
     private static string CreateToken(string userId, string role)

@@ -27,6 +27,7 @@ builder.Services.AddScoped<IForumRepository, MongoForumRepository>();
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SearchService>();
+builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<TeamSyncService>();
 builder.Services.AddScoped<TeamLogoSyncService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();

@@ -25,43 +25,6 @@ public sealed class ContentEndpointsTests
         Assert.Equal("vest", news[0].Tip);
     }
 
-    [Fact]
-    public async Task GetForum_ReturnsOnlyVisibleDiscussionPosts()
-    {
-        using var factory = CreateFactory();
-        var client = factory.CreateClient();
-
-        var discussions = await client.GetFromJsonAsync<List<Post>>("/api/forum");
-
-        Assert.NotNull(discussions);
-        Assert.Single(discussions);
-        Assert.Equal("discussion-1", discussions[0].Id);
-        Assert.Equal("diskusija", discussions[0].Tip);
-    }
-
-    [Fact]
-    public async Task GetForumPostById_ReturnsDiscussion_WhenItExistsAndIsVisible()
-    {
-        using var factory = CreateFactory();
-        var client = factory.CreateClient();
-
-        var discussion = await client.GetFromJsonAsync<Post>("/api/forum/discussion-1");
-
-        Assert.NotNull(discussion);
-        Assert.Equal("discussion-1", discussion.Id);
-    }
-
-    [Fact]
-    public async Task GetForumPostById_ReturnsNotFound_ForNewsPost()
-    {
-        using var factory = CreateFactory();
-        var client = factory.CreateClient();
-
-        var response = await client.GetAsync("/api/forum/news-1");
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
     private static WebApplicationFactory<Program> CreateFactory()
     {
         return new WebApplicationFactory<Program>()

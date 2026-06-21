@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PLeagueHub.Api.Models;
-using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Requests;
+using PLeagueHub.Api.Responses;
+using PLeagueHub.Api.Services;
 
 namespace PLeagueHub.Api.Controllers;
 
@@ -11,153 +11,141 @@ namespace PLeagueHub.Api.Controllers;
 [Route("api/forum")]
 public sealed class ForumController : ControllerBase
 {
-    private readonly IRepository<Comment> _commentsRepository;
-    private readonly IRepository<Post> _postsRepository;
+    private readonly IForumService _forumService;
 
-    public ForumController(
-        IRepository<Post> postsRepository,
-        IRepository<Comment> commentsRepository)
+    public ForumController(IForumService forumService)
     {
-        _postsRepository = postsRepository;
-        _commentsRepository = commentsRepository;
+        _forumService = forumService;
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyCollection<Post>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyCollection<Post>>> GetDiscussionsAsync(
+    [ProducesResponseType(typeof(PagedResponse<ForumTopicResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResponse<ForumTopicResponse>>> GetDiscussionsAsync(
+        [FromQuery] ForumListRequest request,
         CancellationToken cancellationToken)
     {
-        var posts = await _postsRepository.GetAllAsync(cancellationToken);
-        var discussions = posts
-            .Where(IsVisibleDiscussion)
-            .OrderByDescending(post => post.DatumKreiranja)
-            .ToList();
-
-        return Ok(discussions);
+        return Ok(await _forumService.GetTopicsAsync(request, cancellationToken));
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Post), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ForumDiscussionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Post>> GetDiscussionByIdAsync(
+    public async Task<ActionResult<ForumDiscussionResponse>> GetDiscussionByIdAsync(
         string id,
         CancellationToken cancellationToken)
     {
-        var post = await _postsRepository.GetByIdAsync(id, cancellationToken);
-
-        if (post is null || !IsVisibleDiscussion(post))
-        {
-            return NotFound();
-        }
-
-        return Ok(post);
+        var discussion = await _forumService.GetDiscussionAsync(id, cancellationToken);
+        return discussion is null ? NotFound() : Ok(discussion);
     }
 
     [Authorize]
     [HttpPost]
-    [ProducesResponseType(typeof(Post), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ForumDiscussionResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<Post>> CreateDiscussionAsync(
+    public async Task<ActionResult<ForumDiscussionResponse>> CreateDiscussionAsync(
         CreateForumPostRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Naslov) || string.IsNullOrWhiteSpace(request.Sadrzaj))
+        var result = await _forumService.CreateDiscussionAsync(
+            request,
+            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            cancellationToken);
+
+        if (result.Error != ForumError.None)
         {
-            return BadRequest(new { message = "Naslov i sadrzaj su obavezni." });
+            return MapError(result.Error, result.Message);
         }
 
-        var authorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrWhiteSpace(authorId))
-        {
-            return Unauthorized();
-        }
-
-        var post = new Post
-        {
-            AutorId = authorId,
-            Naslov = request.Naslov.Trim(),
-            Sadrzaj = request.Sadrzaj.Trim(),
-            Tip = "diskusija",
-            DatumKreiranja = DateTime.UtcNow,
-            Obrisan = false
-        };
-
-        var createdPost = await _postsRepository.CreateAsync(post, cancellationToken);
-        return Created($"/api/forum/{createdPost.Id}", createdPost);
+        return Created($"/api/forum/{result.Value!.Id}", result.Value);
     }
 
     [HttpGet("{id}/comments")]
-    [ProducesResponseType(typeof(IReadOnlyCollection<Comment>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IReadOnlyList<ForumCommentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<IReadOnlyCollection<Comment>>> GetCommentsAsync(
+    public async Task<ActionResult<IReadOnlyList<ForumCommentResponse>>> GetCommentsAsync(
         string id,
         CancellationToken cancellationToken)
     {
-        var post = await _postsRepository.GetByIdAsync(id, cancellationToken);
-
-        if (post is null || !IsVisibleDiscussion(post))
-        {
-            return NotFound();
-        }
-
-        var comments = await _commentsRepository.GetAllAsync(cancellationToken);
-        var visibleComments = comments
-            .Where(comment => comment.PostId == id)
-            .Where(comment => !comment.Obrisan)
-            .OrderBy(comment => comment.DatumKreiranja)
-            .ToList();
-
-        return Ok(visibleComments);
+        var comments = await _forumService.GetCommentsAsync(
+            id,
+            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            cancellationToken);
+        return comments is null ? NotFound() : Ok(comments);
     }
 
     [Authorize]
     [HttpPost("{id}/comments")]
-    [ProducesResponseType(typeof(Comment), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ForumCommentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Comment>> CreateCommentAsync(
+    public async Task<ActionResult<ForumCommentResponse>> CreateCommentAsync(
         string id,
         CreateCommentRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Tekst))
+        var result = await _forumService.CreateCommentAsync(
+            id,
+            request,
+            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            cancellationToken);
+
+        if (result.Error != ForumError.None)
         {
-            return BadRequest(new { message = "Tekst komentara je obavezan." });
+            return MapError(result.Error, result.Message);
         }
 
-        var post = await _postsRepository.GetByIdAsync(id, cancellationToken);
-
-        if (post is null || !IsVisibleDiscussion(post))
-        {
-            return NotFound();
-        }
-
-        var authorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrWhiteSpace(authorId))
-        {
-            return Unauthorized();
-        }
-
-        var comment = new Comment
-        {
-            PostId = id,
-            AutorId = authorId,
-            Tekst = request.Tekst.Trim(),
-            DatumKreiranja = DateTime.UtcNow,
-            Obrisan = false
-        };
-
-        var createdComment = await _commentsRepository.CreateAsync(comment, cancellationToken);
-        return Created($"/api/forum/{id}/comments/{createdComment.Id}", createdComment);
+        return Created($"/api/forum/{id}/comments/{result.Value!.Id}", result.Value);
     }
 
-    private static bool IsVisibleDiscussion(Post post)
+    [Authorize]
+    [HttpPut("comments/{commentId}/vote")]
+    [ProducesResponseType(typeof(ForumVoteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ForumVoteResponse>> VoteAsync(
+        string commentId,
+        VoteCommentRequest request,
+        CancellationToken cancellationToken)
     {
-        return !post.Obrisan
-            && string.Equals(post.Tip, "diskusija", StringComparison.OrdinalIgnoreCase);
+        var result = await _forumService.VoteAsync(
+            commentId,
+            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            request.Value,
+            cancellationToken);
+        return result.Error == ForumError.None
+            ? Ok(result.Value)
+            : MapError(result.Error, result.Message);
+    }
+
+    [Authorize]
+    [HttpDelete("comments/{commentId}/vote")]
+    [ProducesResponseType(typeof(ForumVoteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ForumVoteResponse>> RemoveVoteAsync(
+        string commentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _forumService.RemoveVoteAsync(
+            commentId,
+            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            cancellationToken);
+        return result.Error == ForumError.None
+            ? Ok(result.Value)
+            : MapError(result.Error, result.Message);
+    }
+
+    private ActionResult MapError(ForumError error, string? message)
+    {
+        var body = new { message = message ?? "Zahtev nije moguce obraditi." };
+        return error switch
+        {
+            ForumError.Unauthorized => Unauthorized(body),
+            ForumError.NotFound => NotFound(body),
+            _ => BadRequest(body)
+        };
     }
 }
