@@ -97,7 +97,7 @@ export function Layout() {
         </nav>
       </div>
 
-      <div className="mx-auto grid max-w-[1440px] gap-4 px-3 py-4 md:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[210px_minmax(0,1fr)_270px]">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-4 px-3 py-4 md:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[210px_minmax(0,1fr)_270px]">
         <aside className="hidden md:block">
           <nav className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <p className="border-b border-slate-100 px-4 py-3 text-[11px] font-bold uppercase text-slate-400">Meni</p>

@@ -30,5 +30,5 @@ export function ForumThread(props: ForumThreadProps) {
     ));
   }
 
-  return <div className="space-y-2">{renderNodes(props.nodes)}</div>;
+  return <div className="min-w-0 max-w-full space-y-2 overflow-hidden">{renderNodes(props.nodes)}</div>;
 }

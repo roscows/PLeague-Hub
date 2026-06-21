@@ -72,7 +72,7 @@ describe('Forum discussion page', () => {
   });
 
   it('renders the original post and numbered nested comments', async () => {
-    renderPage();
+    const { container } = renderPage();
 
     expect(await screen.findByRole('heading', { name: discussion.naslov })).toBeInTheDocument();
     expect(screen.getByText('Argumentujte ko je najveci favorit.')).toBeInTheDocument();
@@ -81,6 +81,7 @@ describe('Forum discussion page', () => {
     expect(screen.getByText('#3')).toBeInTheDocument();
     expect(screen.getByText('Komentar je uklonjen')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Svidja mi se komentaru #1' })).toBeDisabled();
+    expect(container.querySelector('[data-comment-depth="3"]')).toHaveClass('min-w-0', 'max-w-full');
   });
 
   it('sends a single vote and updates its selected state', async () => {
