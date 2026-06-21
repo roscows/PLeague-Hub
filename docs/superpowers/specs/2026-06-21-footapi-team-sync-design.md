@@ -27,7 +27,7 @@ This preserves current MongoDB IDs and therefore preserves player links and user
 
 ## Updated Fields
 
-The standings response updates `ProviderId`, name, abbreviation when available, logo URL, points, and position. Existing stadium and founding year values are preserved because standings do not reliably contain those profile fields. New teams use empty stadium and zero founding year until the team-profile phase fills them.
+The standings response updates `ProviderId`, name, abbreviation when available, points, and position. Existing logo URL, stadium, and founding year values are preserved because standings do not contain those profile fields. New teams use an empty logo URL and stadium plus zero founding year until the team-profile and media-caching phase fills them. Provider image URLs are not stored because browser requests to those URLs would require exposing RapidAPI credentials.
 
 ## Components
 
