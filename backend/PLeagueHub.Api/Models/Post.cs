@@ -23,4 +23,7 @@ public sealed class Post : BaseDocument
 
     [BsonElement("obrisan")]
     public bool Obrisan { get; set; }
+
+    [BsonElement("istaknut")]
+    public bool Istaknut { get; set; }
 }

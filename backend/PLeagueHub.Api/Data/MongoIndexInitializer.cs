@@ -21,6 +21,7 @@ public sealed class MongoIndexInitializer
         await CreateUserIndexesAsync(cancellationToken);
         await CreatePostIndexesAsync(cancellationToken);
         await CreateCommentIndexesAsync(cancellationToken);
+        await CreateCommentVoteIndexesAsync(cancellationToken);
     }
 
     private async Task CreateTeamIndexesAsync(CancellationToken cancellationToken)
@@ -139,14 +140,37 @@ public sealed class MongoIndexInitializer
             new CreateIndexModel<Comment>(
                 Builders<Comment>.IndexKeys
                     .Ascending(comment => comment.PostId)
-                    .Ascending(comment => comment.Obrisan)
+                    .Ascending(comment => comment.ParentCommentId)
                     .Ascending(comment => comment.DatumKreiranja),
-                new CreateIndexOptions { Name = "idx_comments_postId_obrisan_datumKreiranja" }),
+                new CreateIndexOptions { Name = "idx_comments_postId_parentId_datumKreiranja" }),
             new CreateIndexModel<Comment>(
                 Builders<Comment>.IndexKeys.Ascending(comment => comment.AutorId),
                 new CreateIndexOptions { Name = "idx_comments_autorId" })
         };
 
         await _context.Comments.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateCommentVoteIndexesAsync(CancellationToken cancellationToken)
+    {
+        var indexes = new[]
+        {
+            new CreateIndexModel<CommentVote>(
+                Builders<CommentVote>.IndexKeys
+                    .Ascending(vote => vote.CommentId)
+                    .Ascending(vote => vote.UserId),
+                new CreateIndexOptions
+                {
+                    Name = "uq_commentVotes_commentId_userId",
+                    Unique = true
+                }),
+            new CreateIndexModel<CommentVote>(
+                Builders<CommentVote>.IndexKeys
+                    .Ascending(vote => vote.CommentId)
+                    .Ascending(vote => vote.Value),
+                new CreateIndexOptions { Name = "idx_commentVotes_commentId_value" })
+        };
+
+        await _context.CommentVotes.Indexes.CreateManyAsync(indexes, cancellationToken);
     }
 }

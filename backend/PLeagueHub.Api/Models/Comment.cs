@@ -13,6 +13,10 @@ public sealed class Comment : BaseDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string AutorId { get; set; } = string.Empty;
 
+    [BsonElement("parentCommentId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? ParentCommentId { get; set; }
+
     [BsonElement("tekst")]
     public string Tekst { get; set; } = string.Empty;
 

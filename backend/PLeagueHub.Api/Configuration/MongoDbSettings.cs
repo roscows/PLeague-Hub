@@ -19,4 +19,6 @@ public sealed class MongoDbSettings
     public string PostsCollectionName { get; init; } = "Posts";
 
     public string CommentsCollectionName { get; init; } = "Comments";
+
+    public string CommentVotesCollectionName { get; init; } = "CommentVotes";
 }
