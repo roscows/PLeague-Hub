@@ -24,6 +24,9 @@ public interface IForumRepository
 
     Task<Post?> GetVisibleDiscussionAsync(string id, CancellationToken cancellationToken = default);
 
+    Task<Post?> GetVisiblePostAsync(string id, CancellationToken cancellationToken = default) =>
+        GetVisibleDiscussionAsync(id, cancellationToken);
+
     Task<Comment?> GetCommentAsync(string id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Comment>> GetCommentsAsync(string postId, CancellationToken cancellationToken = default);

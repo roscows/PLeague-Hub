@@ -55,6 +55,19 @@ public sealed class MongoForumRepository : IForumRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<Post?> GetVisiblePostAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ObjectId.TryParse(id, out _)) return null;
+
+        var posts = Builders<Post>.Filter;
+        var filter = posts.Eq(post => post.Id, id)
+            & posts.Eq(post => post.Obrisan, false)
+            & posts.In(post => post.Tip, ["diskusija", "vest"]);
+        return await _context.Posts.Find(filter).FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<Comment?> GetCommentAsync(string id, CancellationToken cancellationToken = default)
     {
         if (!ObjectId.TryParse(id, out _))
