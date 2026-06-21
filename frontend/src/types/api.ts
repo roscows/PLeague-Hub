@@ -17,6 +17,24 @@ export interface UserProfile {
   aktivan: boolean;
   datumReg: string;
   favoritniTimovi: string[];
+  aktivnaModeracija?: ModerationState | null;
+}
+
+export type ModerationType = 'mute' | 'suspenzija';
+export type ModerationDuration = '1h' | '24h' | '7d' | '30d' | 'permanent';
+
+export interface ModerationState {
+  tip: ModerationType;
+  razlog: string;
+  pocetak: string;
+  isticeAt: string | null;
+  moderatorId: string;
+}
+
+export interface ModerationActionRequest {
+  tip: ModerationType;
+  trajanje: ModerationDuration;
+  razlog: string;
 }
 
 export interface Team {
@@ -87,6 +105,7 @@ export interface ForumTopic {
   naslov: string;
   autorId: string;
   autorUsername: string;
+  autorUloga: Role;
   brojOdgovora: number;
   datumKreiranja: string;
   poslednjaAktivnost: string;
@@ -121,6 +140,9 @@ export interface ForumComment {
   lajkovi: number;
   dislajkovi: number;
   trenutniGlas: CommentVoteValue | null;
+  istaknut: boolean;
+  istaknutAt: string | null;
+  istakaoId: string | null;
 }
 
 export interface ForumCommentNode extends ForumComment {

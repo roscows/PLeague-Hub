@@ -17,6 +17,7 @@ import { teamsApi } from '../services/teamsApi';
 import type { Team } from '../types/api';
 import { GlobalSearch } from './GlobalSearch';
 import { TeamLogo } from './TeamLogo';
+import { ModerationNotice } from './forum/ModerationNotice';
 
 const navItems = [
   { to: '/', label: 'Pocetna', icon: Home },
@@ -77,6 +78,8 @@ export function Layout() {
           </div>
         </div>
       </header>
+
+      {user?.aktivnaModeracija && <ModerationNotice state={user.aktivnaModeracija} />}
 
       <div className="w-full max-w-full overflow-hidden border-b border-slate-200 bg-white md:hidden">
         <nav className="flex w-full max-w-full gap-1 overflow-x-auto px-3 py-2">
