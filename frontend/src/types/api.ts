@@ -74,6 +74,73 @@ export interface Comment {
   obrisan: boolean;
 }
 
+export interface PagedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ForumTopic {
+  id: string;
+  naslov: string;
+  autorId: string;
+  autorUsername: string;
+  brojOdgovora: number;
+  datumKreiranja: string;
+  poslednjaAktivnost: string;
+  poslednjiAutorUsername: string;
+  istaknut: boolean;
+}
+
+export interface ForumDiscussion {
+  id: string;
+  naslov: string;
+  sadrzaj: string;
+  autorId: string;
+  autorUsername: string;
+  autorUloga: Role;
+  datumKreiranja: string;
+  istaknut: boolean;
+}
+
+export type CommentVoteValue = 1 | -1;
+
+export interface ForumComment {
+  id: string;
+  postId: string;
+  parentCommentId: string | null;
+  autorId: string;
+  autorUsername: string;
+  autorUloga: Role;
+  tekst: string;
+  datumKreiranja: string;
+  obrisan: boolean;
+  broj: number;
+  lajkovi: number;
+  dislajkovi: number;
+  trenutniGlas: CommentVoteValue | null;
+}
+
+export interface ForumCommentNode extends ForumComment {
+  children: ForumCommentNode[];
+  depth: number;
+}
+
+export interface ForumVoteResponse {
+  commentId: string;
+  lajkovi: number;
+  dislajkovi: number;
+  trenutniGlas: CommentVoteValue | null;
+}
+
+export interface ForumListQuery {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export interface Statistic {
   id: string;
   matchId: string;
@@ -110,6 +177,7 @@ export interface DiscussionRequest {
 
 export interface CommentRequest {
   tekst: string;
+  parentCommentId?: string;
 }
 
 export interface PlayerFilters {

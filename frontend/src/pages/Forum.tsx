@@ -1,78 +1,153 @@
-import { MessageCircleMore, Send } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, MessageCircleMore, Plus, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ForumComposer } from '../components/forum/ForumComposer';
+import { ForumTopicTable } from '../components/forum/ForumTopicTable';
+import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/apiError';
 import { forumApi } from '../services/forumApi';
-import { useAuth } from '../contexts/AuthContext';
-import type { Post } from '../types/api';
+import type { ForumTopic } from '../types/api';
+
+const PAGE_SIZE = 20;
 
 export function Forum() {
   const { isAuthenticated } = useAuth();
-  const [discussions, setDiscussions] = useState<Post[]>([]);
-  const [naslov, setNaslov] = useState('');
-  const [sadrzaj, setSadrzaj] = useState('');
+  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  function loadDiscussions() {
-    forumApi.list().then(setDiscussions).catch((requestError) => {
-      setError(getApiErrorMessage(requestError, 'Diskusije trenutno nisu dostupne.'));
-    });
-  }
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    loadDiscussions();
-  }, []);
+    const timeout = window.setTimeout(() => {
+      setPage(1);
+      setSearch(searchInput.trim());
+    }, 300);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    return () => window.clearTimeout(timeout);
+  }, [searchInput]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
     setError(null);
 
+    forumApi.list({ ...(search ? { search } : {}), page, pageSize: PAGE_SIZE })
+      .then((response) => {
+        if (!active) return;
+        setTopics(response.items);
+        setTotalPages(response.totalPages);
+      })
+      .catch((requestError) => {
+        if (active) setError(getApiErrorMessage(requestError, 'Diskusije trenutno nisu dostupne.'));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [page, reloadKey, search]);
+
+  async function createTopic(naslov: string, sadrzaj: string) {
     try {
       await forumApi.create({ naslov, sadrzaj });
-      setNaslov('');
-      setSadrzaj('');
-      loadDiscussions();
+      setComposerOpen(false);
+      setPage(1);
+      setReloadKey((value) => value + 1);
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError, 'Diskusija nije sacuvana. Proveri da li si prijavljen.'));
+      throw new Error(getApiErrorMessage(requestError, 'Tema nije objavljena.'));
     }
   }
 
   return (
-    <div className="space-y-6">
-      {isAuthenticated && (
-        <form className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
-          <h2 className="flex items-center gap-2 text-lg font-extrabold"><MessageCircleMore size={19} className="text-brand" /> Nova diskusija</h2>
-          <div className="mt-4 grid gap-3">
+    <div className="space-y-3">
+      <nav aria-label="Putanja" className="text-xs font-semibold text-slate-500">
+        Forum <span className="px-1 text-slate-300">&gt;</span> Premier liga
+      </nav>
+
+      <section className="overflow-hidden rounded border border-slate-200 bg-white shadow-sm">
+        <header className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-extrabold uppercase text-brand">Forum</p>
+            <h1 className="mt-1 text-xl font-extrabold text-slate-950">Premier League diskusije</h1>
+          </div>
+          {isAuthenticated ? (
+            <button
+              className="flex items-center justify-center gap-2 rounded bg-brand px-4 py-2 text-sm font-bold text-white"
+              onClick={() => setComposerOpen((open) => !open)}
+              type="button"
+            >
+              <Plus size={16} /> Nova tema
+            </button>
+          ) : (
+            <Link className="flex items-center justify-center gap-2 rounded bg-brand px-4 py-2 text-sm font-bold text-white" to="/login">
+              <Plus size={16} /> Nova tema
+            </Link>
+          )}
+        </header>
+
+        {composerOpen && <ForumComposer onCancel={() => setComposerOpen(false)} onSubmit={createTopic} />}
+
+        <div className="border-b border-slate-200 p-3">
+          <label className="relative block max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Naslov"
-              value={naslov}
-              onChange={(event) => setNaslov(event.target.value)}
+              aria-label="Pretraga tema"
+              className="w-full rounded border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-brand"
+              placeholder="Pretrazi teme"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
             />
-            <textarea
-              className="min-h-28 rounded-md border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Sadrzaj"
-              value={sadrzaj}
-              onChange={(event) => setSadrzaj(event.target.value)}
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <button className="flex w-fit items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-bold text-white" type="submit">
-              <Send size={15} /> Objavi
+          </label>
+        </div>
+
+        {loading ? (
+          <div className="px-4 py-12 text-center text-sm text-slate-500">Ucitavanje diskusija...</div>
+        ) : error ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <button className="mt-3 text-sm font-bold text-brand" onClick={() => setReloadKey((value) => value + 1)} type="button">
+              Pokusaj ponovo
             </button>
           </div>
-        </form>
-      )}
+        ) : topics.length === 0 ? (
+          <div className="px-4 py-12 text-center text-slate-500">
+            <MessageCircleMore className="mx-auto mb-2" size={24} />
+            <p className="text-sm">Nema tema za izabranu pretragu.</p>
+          </div>
+        ) : (
+          <ForumTopicTable topics={topics} />
+        )}
 
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-4 py-4"><h2 className="text-xl font-extrabold">Forum</h2></div>
-        <div className="divide-y divide-slate-100">
-          {discussions.map((post) => (
-            <article key={post.id} className="px-4 py-4 hover:bg-slate-50">
-              <h3 className="font-bold">{post.naslov}</h3>
-              <p className="mt-2 text-sm text-slate-600">{post.sadrzaj}</p>
-              <p className="mt-3 text-xs text-slate-500">{new Date(post.datumKreiranja).toLocaleString()}</p>
-            </article>
-          ))}
-        </div>
+        {totalPages > 1 && (
+          <footer className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm">
+            <button
+              aria-label="Prethodna strana"
+              className="rounded border border-slate-300 p-2 disabled:opacity-40"
+              disabled={page === 1}
+              onClick={() => setPage((value) => value - 1)}
+              type="button"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="font-semibold text-slate-600">Strana {page} od {totalPages}</span>
+            <button
+              aria-label="Sledeca strana"
+              className="rounded border border-slate-300 p-2 disabled:opacity-40"
+              disabled={page === totalPages}
+              onClick={() => setPage((value) => value + 1)}
+              type="button"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </footer>
+        )}
       </section>
     </div>
   );
