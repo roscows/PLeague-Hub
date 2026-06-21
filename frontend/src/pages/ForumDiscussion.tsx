@@ -3,10 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ForumReplyForm } from '../components/forum/ForumReplyForm';
 import { ForumThread } from '../components/forum/ForumThread';
+import { ModerationModal } from '../components/forum/ModerationModal';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/apiError';
 import { forumApi } from '../services/forumApi';
-import type { CommentVoteValue, ForumComment, ForumDiscussion } from '../types/api';
+import { moderationApi } from '../services/moderationApi';
+import type { CommentVoteValue, ForumComment, ForumCommentNode, ForumDiscussion, ModerationState } from '../types/api';
 import { buildCommentTree } from '../utils/forumTree';
 import { formatRelativeTime } from '../utils/relativeTime';
 
@@ -22,6 +24,7 @@ export function ForumDiscussionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [moderationTarget, setModerationTarget] = useState<{ comment: ForumCommentNode; state: ModerationState | null } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -48,6 +51,40 @@ export function ForumDiscussionPage() {
   }, [id]);
 
   const thread = useMemo(() => buildCommentTree(comments), [comments]);
+
+  async function reloadComments() {
+    if (id) setComments(await forumApi.listComments(id));
+  }
+
+  async function openModeration(comment: ForumCommentNode) {
+    setMutationError(null);
+    try {
+      const state = await moderationApi.getUserState(comment.autorId);
+      setModerationTarget({ comment, state });
+    } catch (requestError) {
+      setMutationError(getApiErrorMessage(requestError, 'Podaci za moderaciju nisu ucitani.'));
+    }
+  }
+
+  async function togglePin(comment: ForumCommentNode) {
+    setMutationError(null);
+    try {
+      await (comment.istaknut ? moderationApi.unpinComment(comment.id) : moderationApi.pinComment(comment.id));
+      await reloadComments();
+    } catch (requestError) {
+      setMutationError(getApiErrorMessage(requestError, 'Status pinovanja nije sacuvan.'));
+    }
+  }
+
+  async function deleteComment(comment: ForumCommentNode) {
+    setMutationError(null);
+    try {
+      await moderationApi.removeComment(comment.id);
+      await reloadComments();
+    } catch (requestError) {
+      setMutationError(getApiErrorMessage(requestError, 'Komentar nije obrisan.'));
+    }
+  }
 
   function requireAuthentication() {
     if (isAuthenticated) return true;
@@ -121,12 +158,6 @@ export function ForumDiscussionPage() {
 
   return (
     <div className="min-w-0 max-w-full space-y-3 overflow-hidden">
-      <nav aria-label="Putanja" className="truncate text-xs font-semibold text-slate-500">
-        <Link className="hover:text-brand" to="/forum">Forum</Link>
-        <span className="px-1 text-slate-300">&gt;</span> Premier liga
-        <span className="px-1 text-slate-300">&gt;</span> {discussion.naslov}
-      </nav>
-
       <article className="min-w-0 max-w-full overflow-hidden rounded border border-slate-300 bg-white shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100 px-4 py-3">
           <h1 className="text-lg font-extrabold text-slate-950">{discussion.naslov}</h1>
@@ -157,12 +188,28 @@ export function ForumDiscussionPage() {
       ) : (
         <ForumThread
           currentUserId={user?.userId}
+          currentUserRole={user?.uloga}
           nodes={thread}
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
+          onDelete={deleteComment}
+          onModerate={openModeration}
           onReply={startReply}
           onSubmitReply={submitReply}
+          onTogglePin={togglePin}
           onVote={vote}
+        />
+      )}
+      {moderationTarget && (
+        <ModerationModal
+          currentState={moderationTarget.state}
+          onChanged={() => setModerationTarget(null)}
+          onClose={() => setModerationTarget(null)}
+          target={{
+            id: moderationTarget.comment.autorId,
+            username: moderationTarget.comment.autorUsername,
+            role: moderationTarget.comment.autorUloga
+          }}
         />
       )}
     </div>

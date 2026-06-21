@@ -1,6 +1,7 @@
-import { MessageSquareReply, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { MessageSquareReply, Pin, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { CommentVoteValue, ForumCommentNode } from '../../types/api';
 import { formatRelativeTime } from '../../utils/relativeTime';
+import { CommentActionsMenu } from './CommentActionsMenu';
 import { ForumReplyForm } from './ForumReplyForm';
 
 interface ForumCommentProps {
@@ -11,13 +12,12 @@ interface ForumCommentProps {
   onCancelReply: () => void;
   onSubmitReply: (commentId: string, text: string) => Promise<void>;
   onVote: (commentId: string, value: CommentVoteValue) => void;
+  parentNumber?: number;
+  canModerate: boolean;
+  onModerate: () => void;
+  onTogglePin: () => void;
+  onDelete: () => void;
 }
-
-const depthClasses = {
-  1: 'min-w-0 w-full max-w-full',
-  2: 'ml-2 min-w-0 w-[calc(100%_-_0.5rem)] max-w-full border-l-2 border-slate-300 pl-2 sm:ml-8 sm:w-[calc(100%_-_2rem)] sm:pl-3',
-  3: 'ml-4 min-w-0 w-[calc(100%_-_1rem)] max-w-full border-l-2 border-slate-300 pl-2 sm:ml-16 sm:w-[calc(100%_-_4rem)] sm:pl-3'
-};
 
 function roleLabel(role: string) {
   if (role === 'administrator') return 'Administrator';
@@ -32,18 +32,40 @@ export function ForumComment({
   onReply,
   onCancelReply,
   onSubmitReply,
-  onVote
+  onVote,
+  parentNumber,
+  canModerate,
+  onModerate,
+  onTogglePin,
+  onDelete
 }: ForumCommentProps) {
   const ownComment = currentUserId === comment.autorId;
   const voteDisabled = ownComment || comment.obrisan;
+  const visualDepth = Math.min(comment.depth, 6);
+  const indent = (visualDepth - 1) * 8;
 
   return (
-    <div className={depthClasses[comment.depth as 1 | 2 | 3]} data-comment-depth={comment.depth}>
+    <div
+      className={`min-w-0 max-w-full ${visualDepth > 1 ? 'border-l-2 border-slate-300 pl-2' : ''}`}
+      data-comment-depth={comment.depth}
+      style={{ marginLeft: indent, width: `calc(100% - ${indent}px)` }}
+    >
       <article className={`min-w-0 max-w-full overflow-hidden rounded border ${comment.obrisan ? 'border-slate-200 bg-slate-50' : 'border-slate-300 bg-white'}`}>
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100 px-3 py-2 text-xs">
           <span className="font-extrabold text-slate-500">#{comment.broj}</span>
-          <span className="ml-auto font-bold text-slate-800">{comment.autorUsername}</span>
+          {comment.depth > 6 && parentNumber && <span className="text-[11px] text-slate-500">odgovor na #{parentNumber}</span>}
+          {comment.istaknut && <span className="flex items-center gap-1 text-[11px] font-bold text-brand"><Pin size={12} /> Pinovano</span>}
+          {canModerate ? (
+            <button className="ml-auto font-bold text-slate-800 hover:text-brand hover:underline" onClick={onModerate} type="button">
+              {comment.autorUsername}
+            </button>
+          ) : (
+            <span className="ml-auto font-bold text-slate-800">{comment.autorUsername}</span>
+          )}
           <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">{roleLabel(comment.autorUloga)}</span>
+          {canModerate && !comment.obrisan && (
+            <CommentActionsMenu number={comment.broj} pinned={comment.istaknut} onDelete={onDelete} onTogglePin={onTogglePin} />
+          )}
         </header>
         <p className={`break-words whitespace-pre-wrap px-3 py-3 text-sm leading-6 ${comment.obrisan ? 'italic text-slate-500' : 'text-slate-700'}`}>
           {comment.tekst}

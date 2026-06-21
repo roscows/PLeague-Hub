@@ -48,6 +48,24 @@ public sealed class ModerationController : ControllerBase
             : MapError(result.Error, result.Message);
     }
 
+    [HttpGet("users/{id}/state")]
+    [ProducesResponseType(typeof(ModerationStateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ModerationStateResponse>> GetUserStateAsync(
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var target = await _repository.GetUserAsync(id, cancellationToken);
+        if (target is null) return NotFound();
+        if (!await CanModerateAsync(target.Id!, cancellationToken))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Nemate dozvolu da moderirate ovog korisnika." });
+
+        var state = await _service.GetActiveStateAsync(id, cancellationToken);
+        return state is null ? NoContent() : Ok(state);
+    }
+
     [HttpDelete("users/{id}/action")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

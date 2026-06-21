@@ -25,7 +25,7 @@ export function buildCommentTree(comments: ForumComment[]): ForumCommentNode[] {
   });
 
   function assignDepth(node: ForumCommentNode, parentDepth: number) {
-    node.depth = Math.min(parentDepth + 1, 3);
+    node.depth = parentDepth + 1;
     node.children.sort(compareComments);
     node.children.forEach((child) => assignDepth(child, node.depth));
   }
@@ -38,4 +38,30 @@ export function buildCommentTree(comments: ForumComment[]): ForumCommentNode[] {
   });
 
   return roots;
+}
+
+export function partitionPinnedThreads(nodes: ForumCommentNode[]) {
+  const pinned: ForumCommentNode[] = [];
+  const regular: ForumCommentNode[] = [];
+
+  for (const node of nodes) {
+    if (node.istaknut) {
+      pinned.push(withDepth(node, 1));
+      continue;
+    }
+
+    const children = partitionPinnedThreads(node.children);
+    pinned.push(...children.pinned);
+    regular.push({ ...node, children: children.regular });
+  }
+
+  return { pinned, regular };
+}
+
+function withDepth(node: ForumCommentNode, depth: number): ForumCommentNode {
+  return {
+    ...node,
+    depth,
+    children: node.children.map((child) => withDepth(child, depth + 1))
+  };
 }

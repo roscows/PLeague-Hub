@@ -2,6 +2,10 @@ import type { ModerationActionRequest, ModerationState } from '../types/api';
 import { api } from './api';
 
 export const moderationApi = {
+  async getUserState(id: string) {
+    const response = await api.get<ModerationState | null>(`/api/moderation/users/${id}/state`);
+    return response.data || null;
+  },
   async applyUserAction(id: string, request: ModerationActionRequest) {
     const response = await api.post<ModerationState>(`/api/moderation/users/${id}/actions`, request);
     return response.data;

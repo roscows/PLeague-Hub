@@ -72,7 +72,7 @@ export function ModerationModal({ target, currentState, onClose, onChanged }: Mo
         <header className="flex items-start justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 className="text-lg font-extrabold" id="moderation-title">{target.username}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{target.role} · {currentState ? 'Aktivna mera' : 'Aktivan'}</p>
+            <p className="mt-0.5 text-xs text-slate-500">{target.role} - {currentState ? 'Aktivna mera' : 'Aktivan'}</p>
           </div>
           <button aria-label="Zatvori" className="rounded p-1 text-slate-500 hover:bg-slate-100" onClick={onClose} type="button"><X size={18} /></button>
         </header>
