@@ -9,6 +9,7 @@ using PLeagueHub.Api.Middleware;
 using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Services;
 using PLeagueHub.Api.Services.Football;
+using PLeagueHub.Api.Services.News;
 
 const string FrontendCorsPolicy = "Frontend";
 
@@ -35,6 +36,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
+builder.Services.AddSingleton<INewsFeedProvider, SyndicationNewsFeedProvider>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TeamSyncService>();
 builder.Services.AddScoped<TeamLogoSyncService>();
