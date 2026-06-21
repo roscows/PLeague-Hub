@@ -22,6 +22,7 @@ public sealed class MongoIndexInitializer
         await CreatePostIndexesAsync(cancellationToken);
         await CreateCommentIndexesAsync(cancellationToken);
         await CreateCommentVoteIndexesAsync(cancellationToken);
+        await CreateModerationActionIndexesAsync(cancellationToken);
     }
 
     private async Task CreateTeamIndexesAsync(CancellationToken cancellationToken)
@@ -145,7 +146,13 @@ public sealed class MongoIndexInitializer
                 new CreateIndexOptions { Name = "idx_comments_postId_parentId_datumKreiranja" }),
             new CreateIndexModel<Comment>(
                 Builders<Comment>.IndexKeys.Ascending(comment => comment.AutorId),
-                new CreateIndexOptions { Name = "idx_comments_autorId" })
+                new CreateIndexOptions { Name = "idx_comments_autorId" }),
+            new CreateIndexModel<Comment>(
+                Builders<Comment>.IndexKeys
+                    .Ascending(comment => comment.PostId)
+                    .Descending(comment => comment.Istaknut)
+                    .Descending(comment => comment.IstaknutAt),
+                new CreateIndexOptions { Name = "idx_comments_postId_istaknut_istaknutAt" })
         };
 
         await _context.Comments.Indexes.CreateManyAsync(indexes, cancellationToken);
@@ -172,5 +179,19 @@ public sealed class MongoIndexInitializer
         };
 
         await _context.CommentVotes.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateModerationActionIndexesAsync(CancellationToken cancellationToken)
+    {
+        var indexes = new[]
+        {
+            new CreateIndexModel<ModerationAction>(
+                Builders<ModerationAction>.IndexKeys
+                    .Ascending(action => action.KorisnikId)
+                    .Descending(action => action.Datum),
+                new CreateIndexOptions { Name = "idx_moderationActions_korisnikId_datum" })
+        };
+
+        await _context.ModerationActions.Indexes.CreateManyAsync(indexes, cancellationToken);
     }
 }

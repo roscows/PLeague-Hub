@@ -30,4 +30,7 @@ public sealed class Match : BaseDocument
 
     [BsonElement("status")]
     public string Status { get; set; } = string.Empty;
+
+    [BsonElement("zavrsenaAt")]
+    public DateTime? ZavrsenaAt { get; set; }
 }

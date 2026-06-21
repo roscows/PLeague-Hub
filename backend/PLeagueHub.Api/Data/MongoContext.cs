@@ -32,6 +32,7 @@ public sealed class MongoContext
         Posts = Database.GetCollection<Post>(settings.PostsCollectionName);
         Comments = Database.GetCollection<Comment>(settings.CommentsCollectionName);
         CommentVotes = Database.GetCollection<CommentVote>(settings.CommentVotesCollectionName);
+        ModerationActions = Database.GetCollection<ModerationAction>(settings.ModerationActionsCollectionName);
     }
 
     public IMongoDatabase Database { get; }
@@ -52,6 +53,8 @@ public sealed class MongoContext
 
     public IMongoCollection<CommentVote> CommentVotes { get; }
 
+    public IMongoCollection<ModerationAction> ModerationActions { get; }
+
     public IMongoCollection<TDocument> GetCollection<TDocument>()
         where TDocument : BaseDocument
     {
@@ -65,6 +68,7 @@ public sealed class MongoContext
             var type when type == typeof(Post) => (IMongoCollection<TDocument>)Posts,
             var type when type == typeof(Comment) => (IMongoCollection<TDocument>)Comments,
             var type when type == typeof(CommentVote) => (IMongoCollection<TDocument>)CommentVotes,
+            var type when type == typeof(ModerationAction) => (IMongoCollection<TDocument>)ModerationActions,
             _ => throw new InvalidOperationException(
                 $"Mongo collection is not configured for document type {typeof(TDocument).Name}.")
         };

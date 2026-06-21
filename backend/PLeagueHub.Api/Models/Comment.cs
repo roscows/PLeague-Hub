@@ -25,4 +25,14 @@ public sealed class Comment : BaseDocument
 
     [BsonElement("obrisan")]
     public bool Obrisan { get; set; }
+
+    [BsonElement("istaknut")]
+    public bool Istaknut { get; set; }
+
+    [BsonElement("istaknutAt")]
+    public DateTime? IstaknutAt { get; set; }
+
+    [BsonElement("istakaoId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? IstakaoId { get; set; }
 }

@@ -24,4 +24,7 @@ public sealed class User : BaseDocument
 
     [BsonElement("favoritniTimovi")]
     public List<string> FavoritniTimovi { get; set; } = [];
+
+    [BsonElement("aktivnaModeracija")]
+    public ActiveModeration? AktivnaModeracija { get; set; }
 }
