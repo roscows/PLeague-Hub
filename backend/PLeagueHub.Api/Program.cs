@@ -38,6 +38,7 @@ builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddScoped<INewsIngestionService, NewsIngestionService>();
 builder.Services.AddSingleton<NewsRelevanceFilter>();
+builder.Services.AddHostedService<NewsIngestionWorker>();
 builder.Services.AddSingleton<INewsFeedProvider, SyndicationNewsFeedProvider>();
 builder.Services.AddSingleton<IPublicAddressResolver, PublicAddressResolver>();
 builder.Services.AddSingleton<SafeNewsSocketConnector>();

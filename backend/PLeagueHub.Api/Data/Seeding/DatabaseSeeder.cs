@@ -14,6 +14,7 @@ public sealed class DatabaseSeeder
     private readonly IRepository<Statistic> _statisticsRepository;
     private readonly IRepository<Team> _teamsRepository;
     private readonly IRepository<User> _usersRepository;
+    private readonly IRepository<NewsSource>? _newsSourcesRepository;
     private readonly IPasswordService _passwordService;
 
     public DatabaseSeeder(
@@ -25,7 +26,8 @@ public sealed class DatabaseSeeder
         IRepository<Comment> commentsRepository,
         IRepository<CommentVote> commentVotesRepository,
         IRepository<User> usersRepository,
-        IPasswordService passwordService)
+        IPasswordService passwordService,
+        IRepository<NewsSource>? newsSourcesRepository = null)
     {
         _teamsRepository = teamsRepository;
         _playersRepository = playersRepository;
@@ -36,6 +38,7 @@ public sealed class DatabaseSeeder
         _commentVotesRepository = commentVotesRepository;
         _usersRepository = usersRepository;
         _passwordService = passwordService;
+        _newsSourcesRepository = newsSourcesRepository;
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -49,6 +52,8 @@ public sealed class DatabaseSeeder
         await SeedUsersAsync(cancellationToken);
         await SeedMissingDocumentsAsync(_commentsRepository, CreateComments(seedNow), cancellationToken);
         await SeedMissingDocumentsAsync(_commentVotesRepository, CreateCommentVotes(), cancellationToken);
+        if (_newsSourcesRepository is not null)
+            await SeedMissingDocumentsAsync(_newsSourcesRepository, CreateNewsSources(seedNow), cancellationToken);
     }
 
     private async Task SeedUsersAsync(CancellationToken cancellationToken)
@@ -580,6 +585,53 @@ public sealed class DatabaseSeeder
                     "665000000000000000000001",
                     "665000000000000000000002"
                 ]
+            }
+        ];
+    }
+
+    private static IReadOnlyCollection<NewsSource> CreateNewsSources(DateTime seedNow)
+    {
+        return
+        [
+            new NewsSource
+            {
+                Id = "665000000000000000000801",
+                Naziv = "BBC Football",
+                FeedUrl = "https://feeds.bbci.co.uk/sport/football/rss.xml",
+                SiteUrl = "https://www.bbc.com/sport/football",
+                PodrazumevanaPouzdanost = "pouzdan_izvor",
+                Aktivan = false,
+                CreatedBy = "system",
+                UpdatedBy = "system",
+                CreatedAt = seedNow,
+                UpdatedAt = seedNow
+            },
+            new NewsSource
+            {
+                Id = "665000000000000000000802",
+                Naziv = "Sky Sports Football",
+                FeedUrl = "https://www.skysports.com/rss/12040",
+                SiteUrl = "https://www.skysports.com/football",
+                PodrazumevanaPouzdanost = "pouzdan_izvor",
+                Aktivan = false,
+                CreatedBy = "system",
+                UpdatedBy = "system",
+                CreatedAt = seedNow,
+                UpdatedAt = seedNow
+            },
+            new NewsSource
+            {
+                Id = "665000000000000000000803",
+                Naziv = "Fantasy Football Scout",
+                FeedUrl = "https://www.fantasyfootballscout.co.uk/feed/",
+                SiteUrl = "https://www.fantasyfootballscout.co.uk",
+                PodrazumevanaKategorija = "fpl",
+                PodrazumevanaPouzdanost = "fpl_analiza",
+                Aktivan = false,
+                CreatedBy = "system",
+                UpdatedBy = "system",
+                CreatedAt = seedNow,
+                UpdatedAt = seedNow
             }
         ];
     }
