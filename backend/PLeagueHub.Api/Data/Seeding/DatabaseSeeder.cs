@@ -51,7 +51,7 @@ public sealed class DatabaseSeeder
         await SeedMissingDocumentsAsync(_postsRepository, CreatePosts(seedNow), cancellationToken);
         await SeedUsersAsync(cancellationToken);
         await SeedMissingDocumentsAsync(_commentsRepository, CreateComments(seedNow), cancellationToken);
-        await SeedMissingDocumentsAsync(_commentVotesRepository, CreateCommentVotes(), cancellationToken);
+        await SeedCommentVotesAsync(cancellationToken);
         if (_newsSourcesRepository is not null)
             await SeedMissingDocumentsAsync(_newsSourcesRepository, CreateNewsSources(seedNow), cancellationToken);
     }
@@ -71,6 +71,17 @@ public sealed class DatabaseSeeder
 
             user.PasswordHash = _passwordService.HashPassword(user, "PLeague123!");
             await _usersRepository.CreateAsync(user, cancellationToken);
+        }
+    }
+
+    private async Task SeedCommentVotesAsync(CancellationToken cancellationToken)
+    {
+        foreach (var vote in CreateCommentVotes())
+        {
+            var exists = await _commentVotesRepository.ExistsAsync(
+                existing => existing.CommentId == vote.CommentId && existing.UserId == vote.UserId,
+                cancellationToken);
+            if (!exists) await _commentVotesRepository.CreateAsync(vote, cancellationToken);
         }
     }
 
