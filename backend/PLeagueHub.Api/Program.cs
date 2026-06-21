@@ -37,6 +37,20 @@ builder.Services.AddScoped<SearchService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddSingleton<INewsFeedProvider, SyndicationNewsFeedProvider>();
+builder.Services.AddSingleton<IPublicAddressResolver, PublicAddressResolver>();
+builder.Services.AddSingleton<SafeNewsSocketConnector>();
+builder.Services.AddHttpClient<INewsFeedClient, SafeNewsFeedClient>(client =>
+{
+    client.Timeout = Timeout.InfiniteTimeSpan;
+}).ConfigurePrimaryHttpMessageHandler(serviceProvider =>
+{
+    var connector = serviceProvider.GetRequiredService<SafeNewsSocketConnector>();
+    return new SocketsHttpHandler
+    {
+        AllowAutoRedirect = false,
+        ConnectCallback = connector.ConnectAsync
+    };
+});
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TeamSyncService>();
 builder.Services.AddScoped<TeamLogoSyncService>();
