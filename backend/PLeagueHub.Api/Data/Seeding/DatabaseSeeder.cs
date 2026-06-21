@@ -9,6 +9,8 @@ public sealed class DatabaseSeeder
     private readonly IRepository<Match> _matchesRepository;
     private readonly IRepository<Player> _playersRepository;
     private readonly IRepository<Post> _postsRepository;
+    private readonly IRepository<Comment> _commentsRepository;
+    private readonly IRepository<CommentVote> _commentVotesRepository;
     private readonly IRepository<Statistic> _statisticsRepository;
     private readonly IRepository<Team> _teamsRepository;
     private readonly IRepository<User> _usersRepository;
@@ -20,6 +22,8 @@ public sealed class DatabaseSeeder
         IRepository<Match> matchesRepository,
         IRepository<Statistic> statisticsRepository,
         IRepository<Post> postsRepository,
+        IRepository<Comment> commentsRepository,
+        IRepository<CommentVote> commentVotesRepository,
         IRepository<User> usersRepository,
         IPasswordService passwordService)
     {
@@ -28,6 +32,8 @@ public sealed class DatabaseSeeder
         _matchesRepository = matchesRepository;
         _statisticsRepository = statisticsRepository;
         _postsRepository = postsRepository;
+        _commentsRepository = commentsRepository;
+        _commentVotesRepository = commentVotesRepository;
         _usersRepository = usersRepository;
         _passwordService = passwordService;
     }
@@ -38,8 +44,10 @@ public sealed class DatabaseSeeder
         await SeedCollectionAsync(_playersRepository, CreatePlayers(), cancellationToken);
         await SeedCollectionAsync(_matchesRepository, CreateMatches(), cancellationToken);
         await SeedCollectionAsync(_statisticsRepository, CreateStatistics(), cancellationToken);
-        await SeedCollectionAsync(_postsRepository, CreatePosts(), cancellationToken);
+        await SeedMissingDocumentsAsync(_postsRepository, CreatePosts(), cancellationToken);
         await SeedUsersAsync(cancellationToken);
+        await SeedMissingDocumentsAsync(_commentsRepository, CreateComments(), cancellationToken);
+        await SeedMissingDocumentsAsync(_commentVotesRepository, CreateCommentVotes(), cancellationToken);
     }
 
     private async Task SeedUsersAsync(CancellationToken cancellationToken)
@@ -75,6 +83,25 @@ public sealed class DatabaseSeeder
 
         foreach (var document in documents)
         {
+            await repository.CreateAsync(document, cancellationToken);
+        }
+    }
+
+    private static async Task SeedMissingDocumentsAsync<TDocument>(
+        IRepository<TDocument> repository,
+        IReadOnlyCollection<TDocument> documents,
+        CancellationToken cancellationToken)
+        where TDocument : BaseDocument
+    {
+        foreach (var document in documents)
+        {
+            if (document.Id is null || await repository.ExistsAsync(
+                    existing => existing.Id == document.Id,
+                    cancellationToken))
+            {
+                continue;
+            }
+
             await repository.CreateAsync(document, cancellationToken);
         }
     }
@@ -326,6 +353,7 @@ public sealed class DatabaseSeeder
                 Sadrzaj = "PLeague Hub prati rezultate, tabelu i statistiku igraca tokom cele sezone.",
                 Tip = "vest",
                 DatumKreiranja = new DateTime(2026, 8, 14, 10, 0, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 8, 14, 10, 0, 0, DateTimeKind.Utc),
                 Obrisan = false
             },
             new Post
@@ -336,9 +364,182 @@ public sealed class DatabaseSeeder
                 Sadrzaj = "Diskutujte o formi klubova, transferima i prvim utiscima nakon uvodnih kola.",
                 Tip = "diskusija",
                 DatumKreiranja = new DateTime(2026, 8, 17, 12, 30, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 8, 17, 14, 5, 0, DateTimeKind.Utc),
                 Obrisan = false
+            },
+            new Post
+            {
+                Id = "665000000000000000000403",
+                AutorId = "665000000000000000000501",
+                Naslov = "Pravila Premier League foruma",
+                Sadrzaj = "Postujte sagovornike, drzite se teme i argumentujte svoje misljenje bez vredjanja.",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 20, 9, 0, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 20, 9, 15, 0, DateTimeKind.Utc),
+                Istaknut = true
+            },
+            new Post
+            {
+                Id = "665000000000000000000404",
+                AutorId = "665000000000000000000503",
+                Naslov = "Ko osvaja Premier League sledece sezone?",
+                Sadrzaj = "Da li aktuelni favoriti ostaju na vrhu ili nas ceka iznenadjenje?",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 21, 8, 20, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 21, 10, 35, 0, DateTimeKind.Utc)
+            },
+            new Post
+            {
+                Id = "665000000000000000000405",
+                AutorId = "665000000000000000000502",
+                Naslov = "Najbolji transfer ovog leta",
+                Sadrzaj = "Koji klub je do sada uradio najbolji posao na trzistu?",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 21, 7, 45, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 21, 10, 5, 0, DateTimeKind.Utc)
+            },
+            new Post
+            {
+                Id = "665000000000000000000406",
+                AutorId = "665000000000000000000503",
+                Naslov = "Haaland ili Salah za kapitena?",
+                Sadrzaj = "Koga birate za prvo kolo fantasy sezone i zasto?",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 21, 6, 30, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 21, 6, 30, 0, DateTimeKind.Utc)
+            },
+            new Post
+            {
+                Id = "665000000000000000000407",
+                AutorId = "665000000000000000000501",
+                Naslov = "Najpotcenjeniji vezista lige",
+                Sadrzaj = "Ko radi najveci posao za ekipu, a ne dobija dovoljno paznje?",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 20, 22, 10, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 20, 22, 10, 0, DateTimeKind.Utc)
+            },
+            new Post
+            {
+                Id = "665000000000000000000408",
+                AutorId = "665000000000000000000502",
+                Naslov = "Prognoza prvog kola",
+                Sadrzaj = "Ostavite rezultate svih utakmica prvog kola.",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 20, 19, 40, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 20, 19, 40, 0, DateTimeKind.Utc)
+            },
+            new Post
+            {
+                Id = "665000000000000000000409",
+                AutorId = "665000000000000000000503",
+                Naslov = "Koji stadion ima najbolju atmosferu?",
+                Sadrzaj = "Anfield, St James Park, Selhurst Park ili neko cetvrti?",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 20, 16, 15, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 20, 16, 15, 0, DateTimeKind.Utc)
+            },
+            new Post
+            {
+                Id = "665000000000000000000410",
+                AutorId = "665000000000000000000501",
+                Naslov = "Mladi igraci koje treba pratiti",
+                Sadrzaj = "Predlozite igrace do 21 godine koji bi mogli da naprave iskorak.",
+                Tip = "diskusija",
+                DatumKreiranja = new DateTime(2026, 6, 20, 13, 0, 0, DateTimeKind.Utc),
+                PoslednjaAktivnost = new DateTime(2026, 6, 20, 13, 0, 0, DateTimeKind.Utc)
             }
         ];
+    }
+
+    private static IReadOnlyCollection<Comment> CreateComments()
+    {
+        return
+        [
+            new Comment
+            {
+                Id = "665000000000000000000601",
+                PostId = "665000000000000000000403",
+                AutorId = "665000000000000000000501",
+                Tekst = "Dobrodosli na forum. Kritika je dobrodosla, vredjanje nije.",
+                DatumKreiranja = new DateTime(2026, 6, 20, 9, 15, 0, DateTimeKind.Utc)
+            },
+            new Comment
+            {
+                Id = "665000000000000000000602",
+                PostId = "665000000000000000000404",
+                AutorId = "665000000000000000000503",
+                Tekst = "Arsenal mi deluje najspremnije ako zadrzi kljucne igrace.",
+                DatumKreiranja = new DateTime(2026, 6, 21, 9, 0, 0, DateTimeKind.Utc)
+            },
+            new Comment
+            {
+                Id = "665000000000000000000603",
+                PostId = "665000000000000000000404",
+                AutorId = "665000000000000000000501",
+                ParentCommentId = "665000000000000000000602",
+                Tekst = "Slazem se za kontinuitet, ali City i dalje ima najdublji sastav.",
+                DatumKreiranja = new DateTime(2026, 6, 21, 9, 25, 0, DateTimeKind.Utc)
+            },
+            new Comment
+            {
+                Id = "665000000000000000000604",
+                PostId = "665000000000000000000404",
+                AutorId = "665000000000000000000503",
+                ParentCommentId = "665000000000000000000603",
+                Tekst = "Dubina je velika, ali ce i motivacija posle toliko sezona biti faktor.",
+                DatumKreiranja = new DateTime(2026, 6, 21, 10, 35, 0, DateTimeKind.Utc)
+            },
+            new Comment
+            {
+                Id = "665000000000000000000605",
+                PostId = "665000000000000000000405",
+                AutorId = "665000000000000000000502",
+                Tekst = "Najbolji transfer nije uvek najskuplji, uklapanje u sistem je kljucno.",
+                DatumKreiranja = new DateTime(2026, 6, 21, 9, 40, 0, DateTimeKind.Utc)
+            },
+            new Comment
+            {
+                Id = "665000000000000000000606",
+                PostId = "665000000000000000000405",
+                AutorId = "665000000000000000000503",
+                ParentCommentId = "665000000000000000000605",
+                Tekst = "Tacno, posebno kod igraca koji odmah resavaju problem u prvih jedanaest.",
+                DatumKreiranja = new DateTime(2026, 6, 21, 10, 5, 0, DateTimeKind.Utc)
+            },
+            new Comment
+            {
+                Id = "665000000000000000000607",
+                PostId = "665000000000000000000402",
+                AutorId = "665000000000000000000503",
+                Tekst = "Rani utisak mi je da ce borba trajati do poslednjih nekoliko kola.",
+                DatumKreiranja = new DateTime(2026, 8, 17, 14, 5, 0, DateTimeKind.Utc)
+            }
+        ];
+    }
+
+    private static IReadOnlyCollection<CommentVote> CreateCommentVotes()
+    {
+        return
+        [
+            CreateVote("665000000000000000000701", "665000000000000000000601", "665000000000000000000503", 1),
+            CreateVote("665000000000000000000702", "665000000000000000000602", "665000000000000000000501", 1),
+            CreateVote("665000000000000000000703", "665000000000000000000602", "665000000000000000000502", -1),
+            CreateVote("665000000000000000000704", "665000000000000000000605", "665000000000000000000503", 1)
+        ];
+    }
+
+    private static CommentVote CreateVote(string id, string commentId, string userId, int value)
+    {
+        var createdAt = new DateTime(2026, 6, 21, 11, 0, 0, DateTimeKind.Utc);
+        return new CommentVote
+        {
+            Id = id,
+            CommentId = commentId,
+            UserId = userId,
+            Value = value,
+            CreatedAt = createdAt,
+            UpdatedAt = createdAt
+        };
     }
 
     private static IReadOnlyCollection<User> CreateUsers()
