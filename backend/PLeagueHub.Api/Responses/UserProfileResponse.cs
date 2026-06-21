@@ -15,4 +15,6 @@ public sealed record UserProfileResponse
     public DateTime DatumReg { get; init; }
 
     public IReadOnlyCollection<string> FavoritniTimovi { get; init; } = [];
+
+    public ModerationStateResponse? AktivnaModeracija { get; init; }
 }

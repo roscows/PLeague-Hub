@@ -10,7 +10,8 @@ public enum ForumError
     Validation,
     NotFound,
     InvalidParent,
-    SelfVote
+    SelfVote,
+    Forbidden
 }
 
 public sealed record ForumResult<T>(T? Value, ForumError Error, string? Message)

@@ -9,10 +9,17 @@ public sealed class ForumService : IForumService
 {
     private const string UnknownUser = "Nepoznat korisnik";
     private readonly IForumRepository _repository;
+    private readonly IModerationService? _moderationService;
 
     public ForumService(IForumRepository repository)
+        : this(repository, null)
+    {
+    }
+
+    public ForumService(IForumRepository repository, IModerationService? moderationService)
     {
         _repository = repository;
+        _moderationService = moderationService;
     }
 
     public async Task<PagedResponse<ForumTopicResponse>> GetTopicsAsync(
@@ -104,6 +111,9 @@ public sealed class ForumService : IForumService
             return ForumResult<ForumDiscussionResponse>.Failure(ForumError.Unauthorized, "Prijava je obavezna.");
         }
 
+        var writeAccess = await CheckWriteAccessAsync(authorId, cancellationToken);
+        if (writeAccess is not null) return ForumResult<ForumDiscussionResponse>.Failure(ForumError.Forbidden, writeAccess);
+
         if (string.IsNullOrWhiteSpace(request.Naslov) || string.IsNullOrWhiteSpace(request.Sadrzaj))
         {
             return ForumResult<ForumDiscussionResponse>.Failure(ForumError.Validation, "Naslov i sadrzaj su obavezni.");
@@ -133,6 +143,9 @@ public sealed class ForumService : IForumService
         {
             return ForumResult<ForumCommentResponse>.Failure(ForumError.Unauthorized, "Prijava je obavezna.");
         }
+
+        var writeAccess = await CheckWriteAccessAsync(authorId, cancellationToken);
+        if (writeAccess is not null) return ForumResult<ForumCommentResponse>.Failure(ForumError.Forbidden, writeAccess);
 
         if (string.IsNullOrWhiteSpace(request.Tekst))
         {
@@ -178,6 +191,9 @@ public sealed class ForumService : IForumService
             return ForumResult<ForumVoteResponse>.Failure(ForumError.Unauthorized, "Prijava je obavezna.");
         }
 
+        var writeAccess = await CheckWriteAccessAsync(userId, cancellationToken);
+        if (writeAccess is not null) return ForumResult<ForumVoteResponse>.Failure(ForumError.Forbidden, writeAccess);
+
         if (value is not (1 or -1))
         {
             return ForumResult<ForumVoteResponse>.Failure(ForumError.Validation, "Glas mora biti 1 ili -1.");
@@ -220,6 +236,9 @@ public sealed class ForumService : IForumService
         {
             return ForumResult<ForumVoteResponse>.Failure(ForumError.Unauthorized, "Prijava je obavezna.");
         }
+
+        var writeAccess = await CheckWriteAccessAsync(userId, cancellationToken);
+        if (writeAccess is not null) return ForumResult<ForumVoteResponse>.Failure(ForumError.Forbidden, writeAccess);
 
         if (await _repository.GetCommentAsync(commentId, cancellationToken) is null)
         {
@@ -301,5 +320,12 @@ public sealed class ForumService : IForumService
     private static string Username(IReadOnlyDictionary<string, User> users, string userId)
     {
         return users.TryGetValue(userId, out var user) ? user.Username : UnknownUser;
+    }
+
+    private async Task<string?> CheckWriteAccessAsync(string userId, CancellationToken cancellationToken)
+    {
+        if (_moderationService is null) return null;
+        var access = await _moderationService.CheckForumWriteAsync(userId, cancellationToken);
+        return access.Allowed ? null : access.Message ?? "Nalog nema dozvolu za ovu akciju.";
     }
 }

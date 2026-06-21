@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using PLeagueHub.Api.Configuration;
 using PLeagueHub.Api.Data;
 using PLeagueHub.Api.Data.Seeding;
+using PLeagueHub.Api.Middleware;
 using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Services;
 using PLeagueHub.Api.Services.Football;
@@ -135,6 +136,7 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
+app.UseMiddleware<ActiveSuspensionMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 

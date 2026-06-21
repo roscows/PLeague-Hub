@@ -10,6 +10,8 @@ public sealed record AuthServiceResult
 
     public AuthResponse? Response { get; init; }
 
+    public ModerationStateResponse? Moderation { get; init; }
+
     public static AuthServiceResult Ok(AuthResponse response)
     {
         return new AuthServiceResult { StatusCode = StatusCodes.Status200OK, Response = response };
@@ -30,8 +32,13 @@ public sealed record AuthServiceResult
         return new AuthServiceResult { StatusCode = StatusCodes.Status409Conflict, Error = error };
     }
 
-    public static AuthServiceResult Unauthorized(string error)
+    public static AuthServiceResult Unauthorized(string error, ModerationStateResponse? moderation = null)
     {
-        return new AuthServiceResult { StatusCode = StatusCodes.Status401Unauthorized, Error = error };
+        return new AuthServiceResult
+        {
+            StatusCode = StatusCodes.Status401Unauthorized,
+            Error = error,
+            Moderation = moderation
+        };
     }
 }

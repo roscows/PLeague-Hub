@@ -15,11 +15,16 @@ public sealed class UsersController : ControllerBase
 {
     private readonly AuthService _authService;
     private readonly IRepository<User> _usersRepository;
+    private readonly IModerationService _moderationService;
 
-    public UsersController(AuthService authService, IRepository<User> usersRepository)
+    public UsersController(
+        AuthService authService,
+        IRepository<User> usersRepository,
+        IModerationService moderationService)
     {
         _authService = authService;
         _usersRepository = usersRepository;
+        _moderationService = moderationService;
     }
 
     [HttpPost("auth/register")]
@@ -55,7 +60,13 @@ public sealed class UsersController : ControllerBase
         return result.StatusCode switch
         {
             StatusCodes.Status200OK => Ok(result.Response),
-            StatusCodes.Status401Unauthorized => Unauthorized(new { message = result.Error }),
+            StatusCodes.Status401Unauthorized => Unauthorized(new
+            {
+                message = result.Error,
+                tip = result.Moderation?.Tip,
+                razlog = result.Moderation?.Razlog,
+                isticeAt = result.Moderation?.IsticeAt
+            }),
             _ => BadRequest(new { message = result.Error })
         };
     }
@@ -108,7 +119,8 @@ public sealed class UsersController : ControllerBase
             return NotFound();
         }
 
-        return Ok(ToProfileResponse(user));
+        var moderation = await _moderationService.GetActiveStateAsync(userId, cancellationToken);
+        return Ok(ToProfileResponse(user, moderation));
     }
 
     [Authorize]
@@ -160,10 +172,13 @@ public sealed class UsersController : ControllerBase
             return NotFound();
         }
 
-        return Ok(ToProfileResponse(user));
+        var moderation = await _moderationService.GetActiveStateAsync(userId, cancellationToken);
+        return Ok(ToProfileResponse(user, moderation));
     }
 
-    private static UserProfileResponse ToProfileResponse(User user)
+    private static UserProfileResponse ToProfileResponse(
+        User user,
+        ModerationStateResponse? moderation = null)
     {
         return new UserProfileResponse
         {
@@ -173,7 +188,8 @@ public sealed class UsersController : ControllerBase
             Uloga = user.Uloga,
             Aktivan = user.Aktivan,
             DatumReg = user.DatumReg,
-            FavoritniTimovi = user.FavoritniTimovi
+            FavoritniTimovi = user.FavoritniTimovi,
+            AktivnaModeracija = moderation
         };
     }
 }

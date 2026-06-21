@@ -145,6 +145,7 @@ public sealed class ForumController : ControllerBase
         {
             ForumError.Unauthorized => Unauthorized(body),
             ForumError.NotFound => NotFound(body),
+            ForumError.Forbidden => StatusCode(StatusCodes.Status403Forbidden, body),
             _ => BadRequest(body)
         };
     }

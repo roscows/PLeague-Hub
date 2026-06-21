@@ -10,15 +10,18 @@ public sealed class AuthService
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IPasswordService _passwordService;
     private readonly IRepository<User> _usersRepository;
+    private readonly IModerationService _moderationService;
 
     public AuthService(
         IRepository<User> usersRepository,
         IPasswordService passwordService,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IModerationService moderationService)
     {
         _usersRepository = usersRepository;
         _passwordService = passwordService;
         _jwtTokenService = jwtTokenService;
+        _moderationService = moderationService;
     }
 
     public async Task<AuthServiceResult> RegisterAsync(
@@ -87,6 +90,12 @@ public sealed class AuthService
         if (user is null || !user.Aktivan || !_passwordService.VerifyPassword(user, request.Password))
         {
             return AuthServiceResult.Unauthorized("Invalid credentials.");
+        }
+
+        var access = await _moderationService.CheckLoginAsync(user, cancellationToken);
+        if (!access.Allowed)
+        {
+            return AuthServiceResult.Unauthorized(access.Message ?? "Nalog je suspendovan.", access.State);
         }
 
         return AuthServiceResult.Ok(CreateAuthResponse(user));
