@@ -1,17 +1,16 @@
-import { ChevronLeft, ChevronRight, MessageCircleMore, Plus, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircleMore, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ForumComposer } from '../components/forum/ForumComposer';
 import { ForumTopicTable } from '../components/forum/ForumTopicTable';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/apiError';
 import { forumApi } from '../services/forumApi';
+import { moderationApi } from '../services/moderationApi';
 import type { ForumTopic } from '../types/api';
 
 const PAGE_SIZE = 20;
 
 export function Forum() {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -19,7 +18,6 @@ export function Forum() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [composerOpen, setComposerOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -54,45 +52,27 @@ export function Forum() {
     };
   }, [page, reloadKey, search]);
 
-  async function createTopic(naslov: string, sadrzaj: string) {
+  async function toggleTopicPin(topic: ForumTopic) {
+    const previousTopics = topics;
+    setTopics((current) => current.map((item) => item.id === topic.id ? { ...item, istaknut: !item.istaknut } : item));
     try {
-      await forumApi.create({ naslov, sadrzaj });
-      setComposerOpen(false);
-      setPage(1);
-      setReloadKey((value) => value + 1);
+      if (topic.istaknut) await moderationApi.unpinPost(topic.id);
+      else await moderationApi.pinPost(topic.id);
     } catch (requestError) {
-      throw new Error(getApiErrorMessage(requestError, 'Tema nije objavljena.'));
+      setTopics(previousTopics);
+      setError(getApiErrorMessage(requestError, 'Pin teme nije sacuvan.'));
     }
   }
 
   return (
     <div className="space-y-3">
-      <nav aria-label="Putanja" className="text-xs font-semibold text-slate-500">
-        Forum <span className="px-1 text-slate-300">&gt;</span> Premier liga
-      </nav>
-
       <section className="overflow-hidden rounded border border-slate-200 bg-white shadow-sm">
-        <header className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="border-b border-slate-200 px-4 py-4">
           <div>
             <p className="text-xs font-extrabold uppercase text-brand">Forum</p>
             <h1 className="mt-1 text-xl font-extrabold text-slate-950">Premier League diskusije</h1>
           </div>
-          {isAuthenticated ? (
-            <button
-              className="flex items-center justify-center gap-2 rounded bg-brand px-4 py-2 text-sm font-bold text-white"
-              onClick={() => setComposerOpen((open) => !open)}
-              type="button"
-            >
-              <Plus size={16} /> Nova tema
-            </button>
-          ) : (
-            <Link className="flex items-center justify-center gap-2 rounded bg-brand px-4 py-2 text-sm font-bold text-white" to="/login">
-              <Plus size={16} /> Nova tema
-            </Link>
-          )}
         </header>
-
-        {composerOpen && <ForumComposer onCancel={() => setComposerOpen(false)} onSubmit={createTopic} />}
 
         <div className="border-b border-slate-200 p-3">
           <label className="relative block max-w-md">
@@ -122,7 +102,7 @@ export function Forum() {
             <p className="text-sm">Nema tema za izabranu pretragu.</p>
           </div>
         ) : (
-          <ForumTopicTable topics={topics} />
+          <ForumTopicTable topics={topics} currentRole={user?.uloga} onTogglePin={toggleTopicPin} />
         )}
 
         {totalPages > 1 && (
