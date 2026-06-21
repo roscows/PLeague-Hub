@@ -1,6 +1,11 @@
 # .NET
 **/bin/
 **/obj/
+**/TestResults/
+**/artifacts/
+*.trx
+*.coverage
+*.coveragexml
 *.tsbuildinfo
 *.user
 *.suo
@@ -11,6 +16,22 @@ node_modules/
 dist/
 build/
 .vite/
+coverage/
+**/coverage/
+.eslintcache
+
+# Local caches and generated tooling artifacts
+.superpowers/
+.cache/
+.tmp/
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.pid
+*.pid.lock
 
 # Environment files
 .env
@@ -39,9 +60,7 @@ frontend/src/test/
 frontend/src/**/*.test.ts
 frontend/src/**/*.test.tsx
 
-# Superpowers visual brainstorming artifacts
-.superpowers/
-
 # OS files
 Thumbs.db
 .DS_Store
+Desktop.ini
