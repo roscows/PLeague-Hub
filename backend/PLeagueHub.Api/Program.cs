@@ -28,6 +28,7 @@ builder.Services.AddSingleton<MongoIndexInitializer>();
 builder.Services.AddSingleton<NewsMetadataMigration>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MongoRepository<>));
 builder.Services.AddScoped<IForumRepository, MongoForumRepository>();
+builder.Services.AddScoped<INewsRepository, MongoNewsRepository>();
 builder.Services.AddScoped<IModerationRepository, MongoModerationRepository>();
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddScoped<AuthService>();
