@@ -232,3 +232,111 @@ export interface SearchResult {
   subtitle: string;
   imageUrl: string;
 }
+
+export type NewsCategory = 'premier_league' | 'transferi' | 'fpl' | 'klubovi';
+export type NewsReliability = 'zvanicno' | 'pouzdan_izvor' | 'glasina' | 'fpl_analiza';
+
+export interface NewsItem {
+  id: string;
+  naslov: string;
+  sazetak: string;
+  kategorija: NewsCategory;
+  pouzdanost: NewsReliability;
+  sourceId: string | null;
+  izvorNaziv: string | null;
+  autorId: string | null;
+  autorUsername: string | null;
+  originalUrl: string | null;
+  imageUrl: string | null;
+  xEmbedUrl: string | null;
+  publishedAt: string;
+  fetchedAt: string | null;
+  uvozAutomatski: boolean;
+  brojKomentara: number;
+}
+
+export interface NewsDetail extends Omit<NewsItem, 'sazetak'> {
+  sadrzaj: string;
+  externalAuthor: string | null;
+  updatedAt: string | null;
+}
+
+export interface NewsTimelineResponse {
+  items: NewsItem[];
+  nextCursor: string | null;
+}
+
+export interface NewsListQuery {
+  kategorija?: NewsCategory;
+  pouzdanost?: NewsReliability;
+  sourceId?: string;
+  preDatuma?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface CreateNewsArticleRequest {
+  naslov: string;
+  sadrzaj: string;
+  kategorija: NewsCategory;
+  pouzdanost: NewsReliability;
+  imageUrl?: string;
+  originalUrl?: string;
+}
+
+export interface CreateXNewsRequest {
+  naslov: string;
+  xUrl: string;
+  kategorija: NewsCategory;
+  pouzdanost: NewsReliability;
+}
+
+export interface UpdateNewsRequest {
+  naslov?: string;
+  sadrzaj?: string;
+  kategorija?: NewsCategory;
+  pouzdanost?: NewsReliability;
+  imageUrl?: string;
+  originalUrl?: string;
+}
+
+export interface NewsSource {
+  id: string;
+  naziv: string;
+  feedUrl: string;
+  siteUrl: string;
+  tip: 'rss';
+  podrazumevanaKategorija: NewsCategory;
+  podrazumevanaPouzdanost: NewsReliability;
+  ukljuceniPojmovi: string[];
+  iskljuceniPojmovi: string[];
+  aktivan: boolean;
+  pauziranRazlog: string | null;
+  uzastopneGreske: number;
+  poslednjaProveraAt: string | null;
+  poslednjiUspehAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewsSourceRequest {
+  naziv: string;
+  feedUrl: string;
+  siteUrl: string;
+  podrazumevanaKategorija: NewsCategory;
+  podrazumevanaPouzdanost: NewsReliability;
+  ukljuceniPojmovi: string[];
+  iskljuceniPojmovi: string[];
+  aktivan: boolean;
+}
+
+export interface NewsSourceSyncResponse {
+  sourceId: string;
+  success: boolean;
+  notModified: boolean;
+  created: number;
+  duplicates: number;
+  promoted: number;
+  skipped: number;
+  error: string | null;
+}

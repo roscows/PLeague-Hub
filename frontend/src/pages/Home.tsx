@@ -6,13 +6,13 @@ import { healthApi } from '../services/healthApi';
 import { matchesApi } from '../services/matchesApi';
 import { newsApi } from '../services/newsApi';
 import { teamsApi } from '../services/teamsApi';
-import type { HealthResponse, Match, Post, Team } from '../types/api';
+import type { HealthResponse, Match, NewsItem, Team } from '../types/api';
 
 export function Home() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [news, setNews] = useState<Post[]>([]);
+  const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +27,7 @@ export function Home() {
         setHealth(healthData);
         setMatches(matchesData);
         setTeams(teamsData);
-        setNews(newsData.slice(0, 4));
+        setNews(newsData.items.slice(0, 4));
       })
       .catch(() => setError('Backend nije dostupan. Pokreni MongoDB i .NET API na portu 5000.'))
       .finally(() => setIsLoading(false));
@@ -104,11 +104,11 @@ export function Home() {
           {news.map((post) => (
             <article key={post.id} className="grid gap-2 px-4 py-4 hover:bg-slate-50 sm:grid-cols-[120px_1fr]">
               <p className="text-xs font-semibold text-slate-400">
-                {new Date(post.datumKreiranja).toLocaleDateString('sr-RS')}
+                {new Date(post.publishedAt).toLocaleDateString('sr-RS')}
               </p>
               <div className="min-w-0">
                 <h3 className="break-words text-sm font-bold">{post.naslov}</h3>
-                <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{post.sadrzaj}</p>
+                <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">{post.sazetak}</p>
               </div>
             </article>
           ))}

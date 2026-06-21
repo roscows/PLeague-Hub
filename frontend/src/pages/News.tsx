@@ -1,32 +1,112 @@
-import { Newspaper } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { NewsFilters } from '../components/news/NewsFilters';
+import type { NewsCategoryFilter } from '../components/news/NewsFilters';
+import { NewsTimeline } from '../components/news/NewsTimeline';
+import { useAuth } from '../contexts/AuthContext';
+import { getApiErrorMessage } from '../services/apiError';
 import { newsApi } from '../services/newsApi';
-import type { Post } from '../types/api';
+import type { NewsItem, NewsListQuery, NewsReliability } from '../types/api';
+
+const PAGE_SIZE = 20;
 
 export function News() {
-  const [news, setNews] = useState<Post[]>([]);
+  const { user } = useAuth();
+  const [items, setItems] = useState<NewsItem[]>([]);
+  const [category, setCategory] = useState<NewsCategoryFilter>('sve');
+  const [reliability, setReliability] = useState<NewsReliability | ''>('');
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const generation = useRef(0);
+  const canEdit = user?.uloga === 'moderator' || user?.uloga === 'administrator';
+
+  function query(nextCursor?: string): NewsListQuery {
+    return {
+      ...(category !== 'sve' ? { kategorija: category } : {}),
+      ...(reliability ? { pouzdanost: reliability } : {}),
+      ...(nextCursor ? { cursor: nextCursor } : {}),
+      limit: PAGE_SIZE
+    };
+  }
 
   useEffect(() => {
-    newsApi.list().then(setNews);
-  }, []);
+    const requestGeneration = ++generation.current;
+    setLoading(true);
+    setError(null);
+    newsApi.list(query())
+      .then((response) => {
+        if (generation.current !== requestGeneration) return;
+        setItems(response.items);
+        setCursor(response.nextCursor);
+      })
+      .catch((requestError) => {
+        if (generation.current === requestGeneration) {
+          setItems([]);
+          setError(getApiErrorMessage(requestError, 'Vesti trenutno nisu dostupne.'));
+        }
+      })
+      .finally(() => {
+        if (generation.current === requestGeneration) setLoading(false);
+      });
+  }, [category, reliability, reloadKey]);
+
+  async function loadMore() {
+    if (!cursor || loadingMore) return;
+    const requestGeneration = generation.current;
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const response = await newsApi.list(query(cursor));
+      if (generation.current !== requestGeneration) return;
+      setItems((current) => {
+        const merged = new Map(current.map((item) => [item.id, item]));
+        response.items.forEach((item) => merged.set(item.id, item));
+        return [...merged.values()];
+      });
+      setCursor(response.nextCursor);
+    } catch (requestError) {
+      if (generation.current === requestGeneration) {
+        setError(getApiErrorMessage(requestError, 'Sledece vesti nisu ucitane.'));
+      }
+    } finally {
+      if (generation.current === requestGeneration) setLoadingMore(false);
+    }
+  }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-4">
-        <Newspaper size={18} className="text-brand" />
-        <h1 className="text-xl font-extrabold">Premier League vesti</h1>
-      </div>
-      <div className="divide-y divide-slate-100">
-        {news.map((post) => (
-          <article key={post.id} className="grid gap-3 px-4 py-5 hover:bg-slate-50 sm:grid-cols-[110px_1fr]">
-            <p className="text-xs font-semibold text-slate-400">{new Date(post.datumKreiranja).toLocaleDateString('sr-RS')}</p>
-            <div>
-              <h2 className="text-base font-extrabold">{post.naslov}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{post.sadrzaj}</p>
-            </div>
-          </article>
-        ))}
-      </div>
+    <section className="min-w-0">
+      <header className="flex min-h-20 items-center justify-between gap-4 border-b-2 border-brand bg-white px-4 py-4">
+        <div>
+          <p className="text-[11px] font-extrabold uppercase text-brand">Vesti</p>
+          <h1 className="mt-1 text-xl font-extrabold text-slate-950">Premier League uzivo</h1>
+        </div>
+        {canEdit && (
+          <Link className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded bg-brand px-3 text-sm font-extrabold text-white hover:bg-red-700" to="/news?compose=1">
+            <Plus size={16} />
+            <span className="hidden sm:inline">Objavi vest</span>
+            <span className="sm:hidden">Objavi</span>
+          </Link>
+        )}
+      </header>
+      <NewsFilters
+        category={category}
+        reliability={reliability}
+        onCategoryChange={setCategory}
+        onReliabilityChange={setReliability}
+      />
+      <NewsTimeline
+        error={error}
+        hasMore={Boolean(cursor)}
+        items={items}
+        loading={loading}
+        loadingMore={loadingMore}
+        onLoadMore={loadMore}
+        onRetry={() => setReloadKey((value) => value + 1)}
+      />
     </section>
   );
 }
