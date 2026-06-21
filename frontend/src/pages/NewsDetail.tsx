@@ -1,11 +1,12 @@
 import { ArrowLeft, ExternalLink, MessageSquareReply, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { RelativeTime } from '../components/RelativeTime';
 import { ForumReplyForm } from '../components/forum/ForumReplyForm';
 import { ForumThread } from '../components/forum/ForumThread';
 import { ModerationModal } from '../components/forum/ModerationModal';
 import { NewsBadge } from '../components/news/NewsBadge';
+import { NewsEditor } from '../components/news/NewsEditor';
 import { XEmbed } from '../components/news/XEmbed';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/apiError';
@@ -23,6 +24,7 @@ export function NewsDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated, user } = useAuth();
   const [news, setNews] = useState<NewsDetail | null>(null);
   const [comments, setComments] = useState<ForumComment[]>([]);
@@ -33,6 +35,13 @@ export function NewsDetailPage() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{ comment: ForumCommentNode; state: ModerationState | null } | null>(null);
   const canEdit = user?.uloga === 'moderator' || user?.uloga === 'administrator';
+  const editorOpen = canEdit && searchParams.get('edit') === '1';
+
+  function closeEditor() {
+    const next = new URLSearchParams(searchParams);
+    next.delete('edit');
+    setSearchParams(next, { replace: true });
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -153,6 +162,7 @@ export function NewsDetailPage() {
 
   return (
     <div className="min-w-0 max-w-full space-y-4 overflow-hidden">
+      {editorOpen && <NewsEditor existing={news} onClose={closeEditor} onSaved={(updated) => { setNews(updated); closeEditor(); }} />}
       <article className="min-w-0 overflow-hidden border border-slate-200 bg-white">
         <header className="border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">

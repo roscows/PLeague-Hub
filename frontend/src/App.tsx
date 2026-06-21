@@ -7,6 +7,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { News } from './pages/News';
 import { NewsDetailPage } from './pages/NewsDetail';
+import { NewsSourcesPage } from './pages/NewsSources';
 import { Profile } from './pages/Profile';
 import { Results } from './pages/Results';
 import { Stats } from './pages/Stats';
@@ -25,6 +26,9 @@ export function App() {
         <Route path="login" element={<Login />} />
         <Route element={<ProtectedRoute />}>
           <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={['moderator', 'administrator']} />}>
+          <Route path="news/sources" element={<NewsSourcesPage />} />
         </Route>
       </Route>
     </Routes>
