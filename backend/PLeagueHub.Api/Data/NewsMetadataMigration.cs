@@ -25,9 +25,10 @@ public sealed class NewsMetadataMigration
                 ["pouzdanost"] = new BsonDocument("$ifNull", new BsonArray { "$pouzdanost", "pouzdan_izvor" }),
                 ["uvozAutomatski"] = new BsonDocument("$ifNull", new BsonArray { "$uvozAutomatski", false }),
                 ["updatedAt"] = new BsonDocument("$ifNull", new BsonArray { "$updatedAt", "$datumKreiranja" }),
-                ["originalUrl"] = new BsonDocument("$ifNull", new BsonArray { "$originalUrl", "$$REMOVE" }),
-                ["externalId"] = new BsonDocument("$ifNull", new BsonArray { "$externalId", "$$REMOVE" }),
-                ["fingerprint"] = new BsonDocument("$ifNull", new BsonArray { "$fingerprint", "$$REMOVE" })
+                ["originalUrl"] = RemoveIdentityWhenDeleted("$originalUrl"),
+                ["xEmbedUrl"] = RemoveIdentityWhenDeleted("$xEmbedUrl"),
+                ["externalId"] = RemoveIdentityWhenDeleted("$externalId"),
+                ["fingerprint"] = RemoveIdentityWhenDeleted("$fingerprint")
             })
         });
 
@@ -37,4 +38,12 @@ public sealed class NewsMetadataMigration
             cancellationToken: cancellationToken);
         return result.ModifiedCount;
     }
+
+    private static BsonDocument RemoveIdentityWhenDeleted(string field) =>
+        new("$cond", new BsonArray
+        {
+            new BsonDocument("$eq", new BsonArray { "$obrisan", true }),
+            "$$REMOVE",
+            new BsonDocument("$ifNull", new BsonArray { field, "$$REMOVE" })
+        });
 }
