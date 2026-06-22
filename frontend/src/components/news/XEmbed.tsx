@@ -54,15 +54,19 @@ export function XEmbed({ url }: { url: string }) {
 
   useEffect(() => {
     const id = statusId(url);
-    if (!id || !container.current) {
+    const host = container.current;
+    if (!id || !host) {
       setFailed(true);
       return;
     }
 
+    setFailed(false);
+    const mount = document.createElement('div');
+    host.replaceChildren(mount);
     let active = true;
     const timeout = window.setTimeout(() => active && setFailed(true), 8_000);
     loadWidgets()
-      .then((widgets) => widgets.createTweet(id, container.current!, { dnt: true, theme: 'light' }))
+      .then((widgets) => widgets.createTweet(id, mount, { dnt: true, theme: 'light' }))
       .then((element) => {
         if (active && !element) setFailed(true);
       })
@@ -71,6 +75,7 @@ export function XEmbed({ url }: { url: string }) {
     return () => {
       active = false;
       window.clearTimeout(timeout);
+      if (mount.parentElement === host) mount.remove();
     };
   }, [url]);
 

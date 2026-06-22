@@ -4,7 +4,6 @@ export type NewsCategoryFilter = NewsCategory | 'sve';
 
 const categories: Array<{ value: NewsCategoryFilter; label: string }> = [
   { value: 'sve', label: 'Sve' },
-  { value: 'premier_league', label: 'Premier liga' },
   { value: 'transferi', label: 'Transferi' },
   { value: 'fpl', label: 'FPL' },
   { value: 'klubovi', label: 'Klubovi' }
