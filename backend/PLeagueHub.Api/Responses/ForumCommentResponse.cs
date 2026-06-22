@@ -16,7 +16,13 @@ public sealed record ForumCommentResponse(
     int? TrenutniGlas,
     bool Istaknut,
     DateTime? IstaknutAt,
-    string? IstakaoId);
+    string? IstakaoId,
+    FavoriteTeamResponse? AutorFavoritniTim = null);
+
+public sealed record FavoriteTeamResponse(
+    string Id,
+    string Naziv,
+    string LogoUrl);
 
 public sealed record ForumVoteResponse(
     string CommentId,

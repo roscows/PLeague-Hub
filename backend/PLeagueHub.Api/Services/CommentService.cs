@@ -10,11 +10,16 @@ public sealed class CommentService : ICommentService
     private const string UnknownUser = "Nepoznat korisnik";
     private readonly IForumRepository _repository;
     private readonly IModerationService? _moderationService;
+    private readonly IRepository<Team>? _teamsRepository;
 
-    public CommentService(IForumRepository repository, IModerationService? moderationService = null)
+    public CommentService(
+        IForumRepository repository,
+        IModerationService? moderationService = null,
+        IRepository<Team>? teamsRepository = null)
     {
         _repository = repository;
         _moderationService = moderationService;
+        _teamsRepository = teamsRepository;
     }
 
     public async Task<IReadOnlyList<ForumCommentResponse>?> GetCommentsAsync(
@@ -29,9 +34,11 @@ public sealed class CommentService : ICommentService
             comments.Select(comment => comment.AutorId).Distinct().ToList(), cancellationToken);
         var votes = await _repository.GetVotesAsync(
             comments.Select(comment => comment.Id!).ToList(), cancellationToken);
+        var favoriteTeams = await LoadFavoriteTeamsAsync(users.Values, cancellationToken);
 
         return OrderDepthFirst(comments)
-            .Select((comment, index) => MapComment(comment, index + 1, users, votes, currentUserId))
+            .Select((comment, index) => MapComment(
+                comment, index + 1, users, votes, favoriteTeams, currentUserId))
             .ToList();
     }
 
@@ -69,7 +76,9 @@ public sealed class CommentService : ICommentService
             DatumKreiranja = DateTime.UtcNow
         }, cancellationToken);
         var users = await _repository.GetUsersAsync([authorId], cancellationToken);
-        return ForumResult<ForumCommentResponse>.Success(MapComment(comment, 0, users, [], authorId));
+        var favoriteTeams = await LoadFavoriteTeamsAsync(users.Values, cancellationToken);
+        return ForumResult<ForumCommentResponse>.Success(
+            MapComment(comment, 0, users, [], favoriteTeams, authorId));
     }
 
     public async Task<ForumResult<ForumVoteResponse>> VoteAsync(
@@ -158,9 +167,16 @@ public sealed class CommentService : ICommentService
         int number,
         IReadOnlyDictionary<string, User> users,
         IReadOnlyList<CommentVote> votes,
+        IReadOnlyDictionary<string, FavoriteTeamResponse> favoriteTeams,
         string? currentUserId)
     {
         users.TryGetValue(comment.AutorId, out var author);
+        FavoriteTeamResponse? favoriteTeam = null;
+        var favoriteTeamId = author?.FavoritniTimovi.FirstOrDefault();
+        if (favoriteTeamId is not null)
+        {
+            favoriteTeams.TryGetValue(favoriteTeamId, out favoriteTeam);
+        }
         var commentVotes = votes.Where(vote => vote.CommentId == comment.Id).ToList();
         return new ForumCommentResponse(
             comment.Id!, comment.PostId, comment.ParentCommentId, comment.AutorId,
@@ -170,7 +186,33 @@ public sealed class CommentService : ICommentService
             commentVotes.Count(vote => vote.Value == 1),
             commentVotes.Count(vote => vote.Value == -1),
             commentVotes.SingleOrDefault(vote => vote.UserId == currentUserId)?.Value,
-            comment.Istaknut, comment.IstaknutAt, comment.IstakaoId);
+            comment.Istaknut, comment.IstaknutAt, comment.IstakaoId, favoriteTeam);
+    }
+
+    private async Task<IReadOnlyDictionary<string, FavoriteTeamResponse>> LoadFavoriteTeamsAsync(
+        IEnumerable<User> users,
+        CancellationToken cancellationToken)
+    {
+        if (_teamsRepository is null)
+        {
+            return new Dictionary<string, FavoriteTeamResponse>(StringComparer.Ordinal);
+        }
+
+        var teamIds = users
+            .Select(user => user.FavoritniTimovi.FirstOrDefault())
+            .Where(teamId => teamId is not null)
+            .Cast<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var teams = await Task.WhenAll(teamIds.Select(
+            teamId => _teamsRepository.GetByIdAsync(teamId, cancellationToken)));
+
+        return teams
+            .Where(team => team?.Id is not null)
+            .ToDictionary(
+                team => team!.Id!,
+                team => new FavoriteTeamResponse(team!.Id!, team.Naziv, team.LogoUrl),
+                StringComparer.Ordinal);
     }
 
     private static IReadOnlyList<Comment> OrderDepthFirst(IReadOnlyList<Comment> comments)
