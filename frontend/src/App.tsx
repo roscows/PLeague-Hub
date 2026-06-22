@@ -9,6 +9,7 @@ import { News } from './pages/News';
 import { NewsDetailPage } from './pages/NewsDetail';
 import { NewsSourcesPage } from './pages/NewsSources';
 import { Profile } from './pages/Profile';
+import { Register } from './pages/Register';
 import { Results } from './pages/Results';
 import { Stats } from './pages/Stats';
 
@@ -24,6 +25,7 @@ export function App() {
         <Route path="forum" element={<Forum />} />
         <Route path="forum/:id" element={<ForumDiscussionPage />} />
         <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
         <Route element={<ProtectedRoute />}>
           <Route path="profile" element={<Profile />} />
         </Route>
