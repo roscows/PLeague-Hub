@@ -8,14 +8,14 @@ import {
   MessagesSquare,
   Newspaper,
   Star,
-  Trophy,
-  UserCircle
+  Trophy
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { teamsApi } from '../services/teamsApi';
 import type { Team } from '../types/api';
 import { GlobalSearch } from './GlobalSearch';
+import { FavoriteTeamMenu } from './FavoriteTeamMenu';
 import { TeamLogo } from './TeamLogo';
 import { ModerationNotice } from './forum/ModerationNotice';
 
@@ -24,15 +24,26 @@ const navItems = [
   { to: '/results', label: 'Rezultati', icon: CalendarDays },
   { to: '/stats', label: 'Statistike', icon: BarChart3 },
   { to: '/news', label: 'Vesti', icon: Newspaper },
-  { to: '/forum', label: 'Forum', icon: MessagesSquare },
-  { to: '/profile', label: 'Profil', icon: UserCircle }
+  { to: '/forum', label: 'Forum', icon: MessagesSquare }
 ];
+
+function accountSubtitle(role: string | undefined, registeredAt: string | undefined) {
+  if (role === 'administrator') return 'Administrator';
+  if (role === 'moderator') return 'Moderator';
+  if (!registeredAt) return '';
+
+  const date = new Date(registeredAt);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `Clan od ${day}.${month}.${date.getFullYear()}.`;
+}
 
 export function Layout() {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const activeMobileNavRef = useRef<HTMLAnchorElement>(null);
+  const selectedTeam = teams.find((team) => team.id === user?.favoritniTimovi[0]);
 
   useEffect(() => {
     teamsApi.list().then(setTeams).catch(() => setTeams([]));
@@ -63,9 +74,10 @@ export function Layout() {
           <div className="flex items-center gap-2 justify-self-end md:col-start-3 md:row-start-1">
             {isAuthenticated ? (
               <>
-                <div className="hidden text-right sm:block">
+                <FavoriteTeamMenu selectedTeam={selectedTeam} teams={teams} />
+                <div className="hidden min-[480px]:block text-right">
                   <p className="text-sm font-semibold">{user?.username}</p>
-                  <p className="text-[10px] uppercase text-slate-400">{user?.uloga}</p>
+                  <p className="text-[10px] text-slate-400">{accountSubtitle(user?.uloga, user?.datumReg)}</p>
                 </div>
                 <button
                   className="grid size-9 place-items-center rounded-md bg-white/10 hover:bg-white/15"

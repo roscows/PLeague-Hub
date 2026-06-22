@@ -18,7 +18,7 @@ export function Login() {
 
     try {
       await login(emailOrUsername, password);
-      const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/profile';
+      const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/';
       navigate(redirectTo, { replace: true });
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'Login nije uspeo. Proveri podatke.'));

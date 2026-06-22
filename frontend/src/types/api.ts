@@ -127,6 +127,12 @@ export interface ForumDiscussion {
 
 export type CommentVoteValue = 1 | -1;
 
+export interface FavoriteTeamSummary {
+  id: string;
+  naziv: string;
+  logoUrl: string;
+}
+
 export interface ForumComment {
   id: string;
   postId: string;
@@ -144,6 +150,7 @@ export interface ForumComment {
   istaknut: boolean;
   istaknutAt: string | null;
   istakaoId: string | null;
+  autorFavoritniTim?: FavoriteTeamSummary | null;
 }
 
 export interface ForumCommentNode extends ForumComment {

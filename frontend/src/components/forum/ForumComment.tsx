@@ -1,6 +1,7 @@
 import { MessageSquareReply, Pin, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { CommentVoteValue, ForumCommentNode } from '../../types/api';
 import { RelativeTime } from '../RelativeTime';
+import { TeamLogo } from '../TeamLogo';
 import { CommentActionsMenu } from './CommentActionsMenu';
 import { ForumReplyForm } from './ForumReplyForm';
 
@@ -21,8 +22,7 @@ interface ForumCommentProps {
 
 function roleLabel(role: string) {
   if (role === 'administrator') return 'Administrator';
-  if (role === 'moderator') return 'Moderator';
-  return 'Clan';
+  return 'Moderator';
 }
 
 export function ForumComment({
@@ -55,14 +55,29 @@ export function ForumComment({
           <span className="font-extrabold text-slate-500">#{comment.broj}</span>
           {comment.depth > 6 && parentNumber && <span className="text-[11px] text-slate-500">odgovor na #{parentNumber}</span>}
           {comment.istaknut && <span className="flex items-center gap-1 text-[11px] font-bold text-brand"><Pin size={12} /> Pinovano</span>}
-          {canModerate ? (
-            <button className="ml-auto font-bold text-slate-800 hover:text-brand hover:underline" onClick={onModerate} type="button">
-              {comment.autorUsername}
-            </button>
-          ) : (
-            <span className="ml-auto font-bold text-slate-800">{comment.autorUsername}</span>
+          <div className="ml-auto flex min-w-0 items-center gap-1.5">
+            {comment.autorFavoritniTim && (
+              <span className="shrink-0" title={comment.autorFavoritniTim.naziv}>
+                <TeamLogo
+                  className="size-5"
+                  logoUrl={comment.autorFavoritniTim.logoUrl}
+                  name={comment.autorFavoritniTim.naziv}
+                />
+              </span>
+            )}
+            {canModerate ? (
+              <button className="truncate font-bold text-slate-800 hover:text-brand hover:underline" onClick={onModerate} type="button">
+                {comment.autorUsername}
+              </button>
+            ) : (
+              <span className="truncate font-bold text-slate-800">{comment.autorUsername}</span>
+            )}
+          </div>
+          {comment.autorUloga !== 'registrovani' && (
+            <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">
+              {roleLabel(comment.autorUloga)}
+            </span>
           )}
-          <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">{roleLabel(comment.autorUloga)}</span>
           {canModerate && !comment.obrisan && (
             <CommentActionsMenu number={comment.broj} pinned={comment.istaknut} onDelete={onDelete} onTogglePin={onTogglePin} />
           )}

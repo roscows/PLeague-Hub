@@ -31,7 +31,7 @@ export function Register() {
     setPending(true);
     try {
       await register({ username: username.trim(), email: email.trim(), password });
-      const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/profile';
+      const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/';
       navigate(redirectTo, { replace: true });
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'Registracija nije uspela. Proveri podatke.'));
