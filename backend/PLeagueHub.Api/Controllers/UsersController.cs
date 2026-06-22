@@ -154,6 +154,11 @@ public sealed class UsersController : ControllerBase
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
+        if (teamIds.Count > 1)
+        {
+            return BadRequest(new { message = "Mozes izabrati najvise jedan omiljeni tim." });
+        }
+
         foreach (var teamId in teamIds)
         {
             var team = await teamsRepository.GetByIdAsync(teamId, cancellationToken);

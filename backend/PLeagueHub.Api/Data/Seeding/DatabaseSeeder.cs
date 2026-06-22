@@ -593,8 +593,7 @@ public sealed class DatabaseSeeder
                 DatumReg = new DateTime(2026, 8, 1, 9, 10, 0, DateTimeKind.Utc),
                 FavoritniTimovi =
                 [
-                    "665000000000000000000001",
-                    "665000000000000000000002"
+                    "665000000000000000000001"
                 ]
             }
         ];

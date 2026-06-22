@@ -27,6 +27,7 @@ builder.Services.Configure<NewsIngestionSettings>(
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddSingleton<MongoIndexInitializer>();
 builder.Services.AddSingleton<NewsMetadataMigration>();
+builder.Services.AddSingleton<FavoriteTeamMigration>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(MongoRepository<>));
 builder.Services.AddScoped<IForumRepository, MongoForumRepository>();
 builder.Services.AddScoped<INewsRepository, MongoNewsRepository>();
@@ -138,6 +139,7 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 await MigrateNewsMetadataAsync(app.Services);
+await MigrateFavoriteTeamsAsync(app.Services);
 await EnsureMongoIndexesAsync(app.Services);
 
 if (args.Contains("--seed", StringComparer.OrdinalIgnoreCase)
@@ -184,6 +186,12 @@ static async Task EnsureMongoIndexesAsync(IServiceProvider serviceProvider)
 static async Task MigrateNewsMetadataAsync(IServiceProvider serviceProvider)
 {
     var migration = serviceProvider.GetRequiredService<NewsMetadataMigration>();
+    await migration.MigrateAsync();
+}
+
+static async Task MigrateFavoriteTeamsAsync(IServiceProvider serviceProvider)
+{
+    var migration = serviceProvider.GetRequiredService<FavoriteTeamMigration>();
     await migration.MigrateAsync();
 }
 
