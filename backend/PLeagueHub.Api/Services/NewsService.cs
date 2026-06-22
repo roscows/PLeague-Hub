@@ -202,6 +202,10 @@ public sealed class NewsService : INewsService
             return NewsResult<NewsDetailResponse>.Failure(NewsError.NotFound, "Vest nije pronadjena.");
         var old = post.ToBsonDocument();
         post.Obrisan = true;
+        post.OriginalUrl = null;
+        post.XEmbedUrl = null;
+        post.ExternalId = null;
+        post.Fingerprint = null;
         post.UpdatedAt = UtcNow();
         if (!await _repository.UpdateAsync(id, post, cancellationToken))
             return NewsResult<NewsDetailResponse>.Failure(NewsError.NotFound, "Vest nije pronadjena.");

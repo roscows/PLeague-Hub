@@ -65,7 +65,9 @@ public sealed class MongoNewsRepository : INewsRepository
             duplicate |= posts.Eq(post => post.ExternalId, externalId);
 
         return await _context.Posts
-            .Find(posts.Eq(post => post.Tip, "vest") & duplicate)
+            .Find(posts.Eq(post => post.Tip, "vest")
+                & posts.Eq(post => post.Obrisan, false)
+                & duplicate)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
