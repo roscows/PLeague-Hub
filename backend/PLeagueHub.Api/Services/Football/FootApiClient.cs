@@ -55,6 +55,12 @@ public sealed class FootApiClient : IFootballProvider
                 row.Team.Name ?? string.Empty,
                 row.Team.NameCode ?? string.Empty,
                 row.Position,
+                row.Matches,
+                row.Wins,
+                row.Draws,
+                row.Losses,
+                row.ScoresFor,
+                row.ScoresAgainst,
                 row.Points))
             .ToArray() ?? [];
     }
@@ -135,6 +141,12 @@ public sealed class FootApiClient : IFootballProvider
     private sealed record FootApiStandingRow(
         FootApiTeam? Team,
         int Position,
+        int Matches,
+        int Wins,
+        int Draws,
+        int Losses,
+        int ScoresFor,
+        int ScoresAgainst,
         int Points);
 
     private sealed record FootApiTeam(

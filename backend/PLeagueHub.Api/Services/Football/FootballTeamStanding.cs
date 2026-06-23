@@ -5,4 +5,13 @@ public sealed record FootballTeamStanding(
     string Name,
     string Abbreviation,
     int Position,
-    int Points);
+    int Played,
+    int Wins,
+    int Draws,
+    int Losses,
+    int GoalsFor,
+    int GoalsAgainst,
+    int Points)
+{
+    public int GoalDifference => GoalsFor - GoalsAgainst;
+}
