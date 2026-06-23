@@ -337,6 +337,27 @@ export interface NewsSourceRequest {
   aktivan: boolean;
 }
 
+export interface Season {
+  seasonId: number;
+  label: string;
+}
+
+export interface StandingRow {
+  position: number;
+  providerId: number;
+  naziv: string;
+  skracenica: string;
+  logoUrl: string;
+  odigrano: number;
+  pobede: number;
+  nereseno: number;
+  porazi: number;
+  datiGolovi: number;
+  primljeniGolovi: number;
+  golRazlika: number;
+  bodovi: number;
+}
+
 export interface NewsSourceSyncResponse {
   sourceId: string;
   success: boolean;
