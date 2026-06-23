@@ -7,9 +7,7 @@ import {
   LogIn,
   LogOut,
   MessagesSquare,
-  Newspaper,
-  Star,
-  Trophy
+  Newspaper
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,7 +15,6 @@ import { teamsApi } from '../services/teamsApi';
 import type { Team } from '../types/api';
 import { GlobalSearch } from './GlobalSearch';
 import { FavoriteTeamMenu } from './FavoriteTeamMenu';
-import { TeamLogo } from './TeamLogo';
 import { ModerationNotice } from './forum/ModerationNotice';
 
 const navItems = [
@@ -121,7 +118,7 @@ export function Layout() {
         </nav>
       </div>
 
-      <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-4 px-3 py-4 md:grid-cols-[210px_minmax(0,1fr)] xl:grid-cols-[210px_minmax(0,1fr)_270px]">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-4 px-3 py-4 md:grid-cols-[210px_minmax(0,1fr)]">
         <aside className="hidden md:block">
           <nav className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <p className="border-b border-slate-100 px-4 py-3 text-[11px] font-bold uppercase text-slate-400">Meni</p>
@@ -147,28 +144,6 @@ export function Layout() {
         <main className="min-w-0">
           <Outlet />
         </main>
-
-        <aside className="hidden xl:block">
-          <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Trophy size={17} className="text-brand" />
-                <h2 className="text-sm font-bold">Premier League</h2>
-              </div>
-              <Star size={16} className="text-slate-300" />
-            </div>
-            <div className="px-3 py-2">
-              {teams.slice(0, 6).map((team) => (
-                <div key={team.id} className="grid grid-cols-[24px_28px_1fr_32px] items-center gap-2 border-b border-slate-100 py-2.5 last:border-0">
-                  <span className="text-center text-xs font-bold text-slate-400">{team.pozicija}</span>
-                  <TeamLogo className="size-6" logoUrl={team.logoUrl} name={team.naziv} />
-                  <span className="truncate text-xs font-semibold">{team.naziv}</span>
-                  <span className="text-right text-xs font-black">{team.bodovi}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </aside>
       </div>
     </div>
   );
