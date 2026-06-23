@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Caching.Memory;
-using PLeagueHub.Api.Models;
-using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Responses;
 
 namespace PLeagueHub.Api.Services.Football;
@@ -24,16 +22,19 @@ public sealed class StandingsService : IStandingsService
     private static readonly TimeSpan SeasonsTtl = TimeSpan.FromHours(24);
 
     private readonly IFootballProvider _footballProvider;
-    private readonly IRepository<Team> _teamsRepository;
+    private readonly ITeamLogoCache _logoCache;
+    private readonly IProviderRequestPacer _requestPacer;
     private readonly IMemoryCache _cache;
 
     public StandingsService(
         IFootballProvider footballProvider,
-        IRepository<Team> teamsRepository,
+        ITeamLogoCache logoCache,
+        IProviderRequestPacer requestPacer,
         IMemoryCache cache)
     {
         _footballProvider = footballProvider;
-        _teamsRepository = teamsRepository;
+        _logoCache = logoCache;
+        _requestPacer = requestPacer;
         _cache = cache;
     }
 
@@ -106,22 +107,25 @@ public sealed class StandingsService : IStandingsService
                 exception);
         }
 
-        var teams = await _teamsRepository.GetAllAsync(cancellationToken);
-        var logoByProviderId = teams
-            .Where(team => team.ProviderId is not null)
-            .GroupBy(team => team.ProviderId!.Value)
-            .ToDictionary(group => group.Key, group => group.First().LogoUrl);
-
-        var rows = standings
+        var ordered = standings
             .OrderByDescending(standing => standing.Points)
             .ThenByDescending(standing => standing.GoalDifference)
             .ThenByDescending(standing => standing.GoalsFor)
-            .Select((standing, index) => new StandingRowResponse(
+            .ToArray();
+
+        var rows = new List<StandingRowResponse>(ordered.Length);
+
+        for (var index = 0; index < ordered.Length; index++)
+        {
+            var standing = ordered[index];
+            var logoUrl = await ResolveLogoUrlAsync(standing.ProviderId, cancellationToken);
+
+            rows.Add(new StandingRowResponse(
                 index + 1,
                 standing.ProviderId,
                 standing.Name,
                 standing.Abbreviation,
-                logoByProviderId.GetValueOrDefault(standing.ProviderId, string.Empty),
+                logoUrl,
                 standing.Played,
                 standing.Wins,
                 standing.Draws,
@@ -129,10 +133,41 @@ public sealed class StandingsService : IStandingsService
                 standing.GoalsFor,
                 standing.GoalsAgainst,
                 standing.GoalDifference,
-                standing.Points))
-            .ToArray();
+                standing.Points));
+        }
 
-        _cache.Set(cacheKey, rows, seasonId == CurrentSeasonId ? CurrentSeasonTtl : PastSeasonTtl);
-        return rows;
+        IReadOnlyCollection<StandingRowResponse> result = rows;
+        _cache.Set(cacheKey, result, seasonId == CurrentSeasonId ? CurrentSeasonTtl : PastSeasonTtl);
+        return result;
+    }
+
+    private async Task<string> ResolveLogoUrlAsync(int providerId, CancellationToken cancellationToken)
+    {
+        if (providerId <= 0)
+        {
+            return string.Empty;
+        }
+
+        if (_logoCache.Exists(providerId))
+        {
+            return _logoCache.GetPublicUrl(providerId);
+        }
+
+        try
+        {
+            await _requestPacer.WaitAsync(cancellationToken);
+            var logo = await _footballProvider.GetTeamLogoAsync(providerId, cancellationToken);
+            await _logoCache.SaveAsync(providerId, logo, cancellationToken);
+            return _logoCache.GetPublicUrl(providerId);
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException
+                or InvalidDataException
+                or InvalidOperationException
+                or IOException
+                or UnauthorizedAccessException)
+        {
+            return string.Empty;
+        }
     }
 }
