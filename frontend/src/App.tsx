@@ -11,6 +11,7 @@ import { NewsSourcesPage } from './pages/NewsSources';
 import { Register } from './pages/Register';
 import { Results } from './pages/Results';
 import { Stats } from './pages/Stats';
+import { TablePage } from './pages/Table';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route index element={<Home />} />
         <Route path="results" element={<Results />} />
         <Route path="stats" element={<Stats />} />
+        <Route path="tabela" element={<TablePage />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetailPage />} />
         <Route path="forum" element={<Forum />} />

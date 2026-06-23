@@ -3,6 +3,7 @@ import {
   BarChart3,
   CalendarDays,
   Home,
+  ListOrdered,
   LogIn,
   LogOut,
   MessagesSquare,
@@ -23,6 +24,7 @@ const navItems = [
   { to: '/', label: 'Pocetna', icon: Home },
   { to: '/results', label: 'Rezultati', icon: CalendarDays },
   { to: '/stats', label: 'Statistike', icon: BarChart3 },
+  { to: '/tabela', label: 'Tabela', icon: ListOrdered },
   { to: '/news', label: 'Vesti', icon: Newspaper },
   { to: '/forum', label: 'Forum', icon: MessagesSquare }
 ];
