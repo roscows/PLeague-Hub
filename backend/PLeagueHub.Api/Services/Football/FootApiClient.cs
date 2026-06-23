@@ -65,6 +65,28 @@ public sealed class FootApiClient : IFootballProvider
             .ToArray() ?? [];
     }
 
+    public async Task<IReadOnlyCollection<FootballSeason>> GetSeasonsAsync(
+        int tournamentId,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest($"/api/tournament/{tournamentId}/seasons");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var payload = await JsonSerializer.DeserializeAsync<FootApiSeasonsResponse>(
+            responseStream,
+            JsonOptions,
+            cancellationToken);
+
+        return payload?.Seasons?
+            .Select(season => new FootballSeason(
+                season.Id,
+                season.Name ?? string.Empty,
+                season.Year ?? string.Empty))
+            .ToArray() ?? [];
+    }
+
     public async Task<FootballTeamLogo> GetTeamLogoAsync(
         int providerId,
         CancellationToken cancellationToken = default)
@@ -153,4 +175,9 @@ public sealed class FootApiClient : IFootballProvider
         int Id,
         string? Name,
         string? NameCode);
+
+    private sealed record FootApiSeasonsResponse(
+        IReadOnlyCollection<FootApiSeason>? Seasons);
+
+    private sealed record FootApiSeason(int Id, string? Name, string? Year);
 }

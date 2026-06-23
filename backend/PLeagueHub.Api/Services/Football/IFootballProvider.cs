@@ -16,4 +16,8 @@ public interface IFootballProvider
     Task<FootballTeamLogo> GetTeamLogoAsync(
         int providerId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballSeason>> GetSeasonsAsync(
+        int tournamentId,
+        CancellationToken cancellationToken = default);
 }
