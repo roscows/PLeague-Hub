@@ -82,7 +82,10 @@ public sealed class MongoIndexInitializer
                 new CreateIndexOptions { Name = "idx_matches_datum" }),
             new CreateIndexModel<Match>(
                 Builders<Match>.IndexKeys.Ascending(match => match.Status),
-                new CreateIndexOptions { Name = "idx_matches_status" })
+                new CreateIndexOptions { Name = "idx_matches_status" }),
+            new CreateIndexModel<Match>(
+                Builders<Match>.IndexKeys.Ascending(match => match.ProviderId),
+                new CreateIndexOptions { Name = "idx_matches_provider_id", Sparse = true })
         };
 
         await _context.Matches.Indexes.CreateManyAsync(indexes, cancellationToken);

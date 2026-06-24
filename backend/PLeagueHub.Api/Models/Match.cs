@@ -33,4 +33,8 @@ public sealed class Match : BaseDocument
 
     [BsonElement("zavrsenaAt")]
     public DateTime? ZavrsenaAt { get; set; }
+
+    [BsonElement("provider_id")]
+    [BsonIgnoreIfNull]
+    public int? ProviderId { get; set; }
 }

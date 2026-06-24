@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using PLeagueHub.Api.Configuration;
@@ -7,6 +8,10 @@ namespace PLeagueHub.Api.Services.Football;
 public sealed class FootApiClient : IFootballProvider
 {
     private const int MaximumLogoBytes = 1_048_576;
+    private const int MaxPagesPerBucket = 60;
+    private const int MatchFetchDelayMs = 1200;
+    private const int RateLimitBackoffMs = 2500;
+    private const int MaxRateLimitRetries = 5;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly HttpClient _httpClient;
     private readonly FootApiSettings _settings;
@@ -85,6 +90,82 @@ public sealed class FootApiClient : IFootballProvider
                 season.Name ?? string.Empty,
                 season.Year ?? string.Empty))
             .ToArray() ?? [];
+    }
+
+    public async Task<IReadOnlyCollection<FootballEvent>> GetSeasonEventsAsync(
+        int tournamentId,
+        int seasonId,
+        CancellationToken cancellationToken = default)
+    {
+        var events = new Dictionary<int, FootballEvent>();
+
+        foreach (var bucket in new[] { "last", "next" })
+        {
+            var page = 0;
+            var rateLimitRetries = 0;
+
+            while (page <= MaxPagesPerBucket)
+            {
+                await Task.Delay(MatchFetchDelayMs, cancellationToken);
+
+                using var request = CreateRequest(
+                    $"/api/tournament/{tournamentId}/season/{seasonId}/matches/{bucket}/{page}");
+                using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+                if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
+                {
+                    break;
+                }
+
+                if ((int)response.StatusCode == 429)
+                {
+                    if (++rateLimitRetries > MaxRateLimitRetries)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(RateLimitBackoffMs, cancellationToken);
+                    continue;
+                }
+
+                rateLimitRetries = 0;
+                response.EnsureSuccessStatusCode();
+
+                await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                var payload = await JsonSerializer.DeserializeAsync<FootApiEventsResponse>(
+                    responseStream,
+                    JsonOptions,
+                    cancellationToken);
+
+                var rows = payload?.Events ?? [];
+
+                foreach (var row in rows.Where(item => item.HomeTeam is not null && item.AwayTeam is not null))
+                {
+                    events[row.Id] = new FootballEvent(
+                        row.Id,
+                        row.RoundInfo?.Round ?? 0,
+                        row.HomeTeam!.Id,
+                        row.HomeTeam.Name ?? string.Empty,
+                        row.HomeTeam.NameCode ?? string.Empty,
+                        row.AwayTeam!.Id,
+                        row.AwayTeam.Name ?? string.Empty,
+                        row.AwayTeam.NameCode ?? string.Empty,
+                        row.HomeScore?.Current,
+                        row.AwayScore?.Current,
+                        row.Status?.Type ?? string.Empty,
+                        row.StartTimestamp);
+                }
+
+                if (rows.Count == 0 || payload?.HasNextPage == false)
+                {
+                    break;
+                }
+
+                page++;
+            }
+        }
+
+        return events.Values.ToArray();
     }
 
     public async Task<FootballTeamLogo> GetTeamLogoAsync(
@@ -180,4 +261,26 @@ public sealed class FootApiClient : IFootballProvider
         IReadOnlyCollection<FootApiSeason>? Seasons);
 
     private sealed record FootApiSeason(int Id, string? Name, string? Year);
+
+    private sealed record FootApiEventsResponse(
+        bool? HasNextPage,
+        IReadOnlyCollection<FootApiEvent>? Events);
+
+    private sealed record FootApiEvent(
+        int Id,
+        FootApiRoundInfo? RoundInfo,
+        FootApiEventTeam? HomeTeam,
+        FootApiEventTeam? AwayTeam,
+        FootApiScore? HomeScore,
+        FootApiScore? AwayScore,
+        FootApiStatus? Status,
+        long StartTimestamp);
+
+    private sealed record FootApiRoundInfo(int Round);
+
+    private sealed record FootApiEventTeam(int Id, string? Name, string? NameCode);
+
+    private sealed record FootApiScore(int? Current);
+
+    private sealed record FootApiStatus(string? Type);
 }

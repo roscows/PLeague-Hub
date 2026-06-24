@@ -12,13 +12,16 @@ public sealed class IntegrationsController : ControllerBase
 {
     private readonly TeamSyncService _teamSyncService;
     private readonly TeamLogoSyncService _teamLogoSyncService;
+    private readonly IMatchSyncService _matchSyncService;
 
     public IntegrationsController(
         TeamSyncService teamSyncService,
-        TeamLogoSyncService teamLogoSyncService)
+        TeamLogoSyncService teamLogoSyncService,
+        IMatchSyncService matchSyncService)
     {
         _teamSyncService = teamSyncService;
         _teamLogoSyncService = teamLogoSyncService;
+        _matchSyncService = matchSyncService;
     }
 
     [HttpPost("sync/teams")]
@@ -63,6 +66,38 @@ public sealed class IntegrationsController : ControllerBase
             return Ok(result);
         }
         catch (TeamLogoSyncException exception)
+        {
+            return StatusCode(
+                StatusCodes.Status502BadGateway,
+                new { message = exception.Message });
+        }
+    }
+
+    [HttpPost("sync/matches")]
+    [ProducesResponseType(typeof(MatchSyncResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<MatchSyncResponse>> SyncMatchesAsync(
+        [FromQuery] int? seasonId,
+        [FromQuery] bool all = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (all == seasonId.HasValue)
+        {
+            return BadRequest(new { message = "Provide exactly one of seasonId or all=true." });
+        }
+
+        try
+        {
+            var result = all
+                ? await _matchSyncService.SyncAllSeasonsAsync(cancellationToken)
+                : await _matchSyncService.SyncSeasonAsync(seasonId!.Value, cancellationToken);
+
+            return Ok(result);
+        }
+        catch (MatchSyncException exception)
         {
             return StatusCode(
                 StatusCodes.Status502BadGateway,

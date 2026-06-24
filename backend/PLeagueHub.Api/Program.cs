@@ -60,6 +60,7 @@ builder.Services.AddHttpClient<INewsFeedClient, SafeNewsFeedClient>(client =>
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TeamSyncService>();
 builder.Services.AddScoped<TeamLogoSyncService>();
+builder.Services.AddScoped<IMatchSyncService, MatchSyncService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<ITeamLogoCache, LocalTeamLogoCache>();

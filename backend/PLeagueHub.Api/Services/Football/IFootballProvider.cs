@@ -20,4 +20,9 @@ public interface IFootballProvider
     Task<IReadOnlyCollection<FootballSeason>> GetSeasonsAsync(
         int tournamentId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballEvent>> GetSeasonEventsAsync(
+        int tournamentId,
+        int seasonId,
+        CancellationToken cancellationToken = default);
 }
