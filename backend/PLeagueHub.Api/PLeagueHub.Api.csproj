@@ -4,6 +4,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>b29d03fa-c2cb-4d51-b120-74f5a688e7a1</UserSecretsId>
+    <!-- Skip the native apphost (.exe) launcher: Windows Smart App Control blocks the
+         freshly-built unsigned exe, breaking `dotnet run`. App runs via `dotnet PLeagueHub.Api.dll`. -->
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
