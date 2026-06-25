@@ -72,6 +72,62 @@ export interface Match {
   golGost: number | null;
   status: string;
   zavrsenaAt?: string | null;
+  providerId?: number | null;
+}
+
+export interface MatchTeamInfo {
+  naziv: string;
+  skracenica: string;
+  logoUrl: string;
+}
+
+export interface MatchHeader {
+  domacin: MatchTeamInfo;
+  gost: MatchTeamInfo;
+  golDomacin: number | null;
+  golGost: number | null;
+  kolo: number;
+  sezona: string;
+  status: string;
+  datum: string;
+}
+
+export interface StatItem {
+  naziv: string;
+  domacin: string;
+  gost: string;
+}
+
+export interface Incident {
+  tip: string;
+  minut: number;
+  domacin: boolean;
+  tekst: string;
+}
+
+export interface LineupPlayer {
+  ime: string;
+  broj: number;
+  zamena: boolean;
+  pozicija: string;
+}
+
+export interface LineupTeam {
+  formacija: string;
+  igraci: LineupPlayer[];
+}
+
+export interface Lineups {
+  potvrdjeno: boolean;
+  domacin: LineupTeam;
+  gost: LineupTeam;
+}
+
+export interface MatchDetail {
+  header: MatchHeader;
+  statistics: StatItem[];
+  incidents: Incident[];
+  lineups: Lineups | null;
 }
 
 export interface Post {
