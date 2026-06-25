@@ -34,11 +34,9 @@ export function Results() {
     [matches, selectedSeason]
   );
 
-  useEffect(() => {
-    if (gameweek !== '' && !gameweeks.includes(Number(gameweek))) {
-      setGameweek('');
-    }
-  }, [gameweeks, gameweek]);
+  const latestGameweek = gameweeks.length > 0 ? gameweeks[gameweeks.length - 1] : null;
+  const selectedGameweek =
+    gameweek !== '' && gameweeks.includes(Number(gameweek)) ? Number(gameweek) : latestGameweek;
 
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
 
@@ -46,10 +44,10 @@ export function Results() {
     () =>
       matches
         .filter((match) => (selectedSeason ? match.sezona === selectedSeason : true))
-        .filter((match) => (gameweek ? match.kolo === Number(gameweek) : true))
+        .filter((match) => (selectedGameweek !== null ? match.kolo === selectedGameweek : true))
         .filter((match) => (status ? match.status === status : true))
         .sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()),
-    [matches, selectedSeason, gameweek, status]
+    [matches, selectedSeason, selectedGameweek, status]
   );
 
   return (
@@ -75,10 +73,9 @@ export function Results() {
             <select
               aria-label="GW"
               className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand"
-              value={gameweek}
+              value={selectedGameweek ?? ''}
               onChange={(event) => setGameweek(event.target.value)}
             >
-              <option value="">GW</option>
               {gameweeks.map((value) => (
                 <option key={value} value={value}>GW{value}</option>
               ))}
