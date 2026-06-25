@@ -74,6 +74,7 @@ builder.Services.AddHttpClient<IFootballProvider, FootApiClient>((serviceProvide
 });
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IStandingsService, StandingsService>();
+builder.Services.AddScoped<IMatchDetailService, MatchDetailService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
