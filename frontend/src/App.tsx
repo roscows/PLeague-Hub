@@ -12,6 +12,7 @@ import { Register } from './pages/Register';
 import { Results } from './pages/Results';
 import { Stats } from './pages/Stats';
 import { TablePage } from './pages/Table';
+import { MatchDetailPage } from './pages/MatchDetail';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="results" element={<Results />} />
+        <Route path="mec/:id" element={<MatchDetailPage />} />
         <Route path="stats" element={<Stats />} />
         <Route path="tabela" element={<TablePage />} />
         <Route path="news" element={<News />} />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Match, Team } from '../types/api';
 import { RelativeTime } from './RelativeTime';
 import { TeamIdentity } from './TeamIdentity';
@@ -13,7 +14,10 @@ export function MatchRow({ match, teams }: MatchRowProps) {
   const played = match.golDomacin !== null && match.golGost !== null;
 
   return (
-    <div className="grid grid-cols-[56px_minmax(0,1fr)_44px] items-center gap-3 border-b border-slate-100 px-3 py-3 last:border-0 sm:grid-cols-[72px_minmax(0,1fr)_64px]">
+    <Link
+      to={`/mec/${match.id}`}
+      className="grid grid-cols-[56px_minmax(0,1fr)_44px] items-center gap-3 border-b border-slate-100 px-3 py-3 last:border-0 hover:bg-slate-50 sm:grid-cols-[72px_minmax(0,1fr)_64px]"
+    >
       <div className="text-center">
         {played ? (
           <>
@@ -42,6 +46,6 @@ export function MatchRow({ match, teams }: MatchRowProps) {
         <p>{match.golDomacin ?? '-'}</p>
         <p>{match.golGost ?? '-'}</p>
       </div>
-    </div>
+    </Link>
   );
 }
