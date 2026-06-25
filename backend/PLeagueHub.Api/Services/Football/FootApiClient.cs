@@ -221,6 +221,101 @@ public sealed class FootApiClient : IFootballProvider
         return new FootballTeamLogo(content.ToArray(), contentType);
     }
 
+    public async Task<IReadOnlyCollection<FootballStatItem>> GetMatchStatisticsAsync(
+        int eventId,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = await GetMatchResourceAsync<FootApiStatisticsResponse>(
+            eventId, "statistics", cancellationToken);
+
+        var allPeriod = payload?.Statistics?.FirstOrDefault(period =>
+            string.Equals(period.Period, "ALL", StringComparison.OrdinalIgnoreCase));
+
+        return allPeriod?.Groups?
+            .SelectMany(group => group.StatisticsItems ?? [])
+            .Select(item => new FootballStatItem(
+                item.Name ?? string.Empty,
+                item.Home ?? string.Empty,
+                item.Away ?? string.Empty))
+            .ToArray() ?? [];
+    }
+
+    public async Task<IReadOnlyCollection<FootballIncident>> GetMatchIncidentsAsync(
+        int eventId,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = await GetMatchResourceAsync<FootApiIncidentsResponse>(
+            eventId, "incidents", cancellationToken);
+
+        return payload?.Incidents?
+            .Where(incident => !string.IsNullOrWhiteSpace(incident.IncidentType))
+            .Select(incident => new FootballIncident(
+                incident.IncidentType!,
+                incident.Time,
+                incident.IsHome ?? false,
+                incident.Player?.Name ?? string.Empty,
+                incident.PlayerIn?.Name ?? string.Empty,
+                incident.PlayerOut?.Name ?? string.Empty,
+                incident.Text ?? string.Empty))
+            .ToArray() ?? [];
+    }
+
+    public async Task<FootballLineups?> GetMatchLineupsAsync(
+        int eventId,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = await GetMatchResourceAsync<FootApiLineupsResponse>(
+            eventId, "lineups", cancellationToken);
+
+        if (payload is null)
+        {
+            return null;
+        }
+
+        return new FootballLineups(
+            payload.Confirmed ?? false,
+            MapLineupTeam(payload.Home),
+            MapLineupTeam(payload.Away));
+    }
+
+    private static FootballLineupTeam? MapLineupTeam(FootApiLineupTeam? team)
+    {
+        if (team is null)
+        {
+            return null;
+        }
+
+        var players = (team.Players ?? [])
+            .Select(entry => new FootballLineupPlayer(
+                entry.Player?.Name ?? string.Empty,
+                int.TryParse(entry.JerseyNumber, out var number) ? number : 0,
+                entry.Substitute ?? false,
+                entry.Position ?? string.Empty))
+            .ToArray();
+
+        return new FootballLineupTeam(team.Formation ?? string.Empty, players);
+    }
+
+    private async Task<TPayload?> GetMatchResourceAsync<TPayload>(
+        int eventId,
+        string resource,
+        CancellationToken cancellationToken)
+        where TPayload : class
+    {
+        using var request = CreateRequest($"/api/match/{eventId}/{resource}");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        return await JsonSerializer.DeserializeAsync<TPayload>(responseStream, JsonOptions, cancellationToken);
+    }
+
     private HttpRequestMessage CreateRequest(string path)
     {
         if (string.IsNullOrWhiteSpace(_settings.ApiKey))
@@ -283,4 +378,24 @@ public sealed class FootApiClient : IFootballProvider
     private sealed record FootApiScore(int? Current);
 
     private sealed record FootApiStatus(string? Type);
+
+    private sealed record FootApiStatisticsResponse(IReadOnlyCollection<FootApiStatPeriod>? Statistics);
+    private sealed record FootApiStatPeriod(string? Period, IReadOnlyCollection<FootApiStatGroup>? Groups);
+    private sealed record FootApiStatGroup(string? GroupName, IReadOnlyCollection<FootApiStatEntry>? StatisticsItems);
+    private sealed record FootApiStatEntry(string? Name, string? Home, string? Away);
+
+    private sealed record FootApiIncidentsResponse(IReadOnlyCollection<FootApiIncident>? Incidents);
+    private sealed record FootApiIncident(
+        string? IncidentType,
+        int Time,
+        bool? IsHome,
+        FootApiNamed? Player,
+        FootApiNamed? PlayerIn,
+        FootApiNamed? PlayerOut,
+        string? Text);
+    private sealed record FootApiNamed(string? Name);
+
+    private sealed record FootApiLineupsResponse(bool? Confirmed, FootApiLineupTeam? Home, FootApiLineupTeam? Away);
+    private sealed record FootApiLineupTeam(string? Formation, IReadOnlyCollection<FootApiLineupEntry>? Players);
+    private sealed record FootApiLineupEntry(FootApiNamed? Player, string? JerseyNumber, bool? Substitute, string? Position);
 }

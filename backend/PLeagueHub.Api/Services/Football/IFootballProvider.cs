@@ -25,4 +25,16 @@ public interface IFootballProvider
         int tournamentId,
         int seasonId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballStatItem>> GetMatchStatisticsAsync(
+        int eventId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballIncident>> GetMatchIncidentsAsync(
+        int eventId,
+        CancellationToken cancellationToken = default);
+
+    Task<FootballLineups?> GetMatchLineupsAsync(
+        int eventId,
+        CancellationToken cancellationToken = default);
 }
