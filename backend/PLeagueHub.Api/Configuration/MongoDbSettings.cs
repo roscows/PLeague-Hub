@@ -12,6 +12,8 @@ public sealed class MongoDbSettings
 
     public string MatchesCollectionName { get; init; } = "Matches";
 
+    public string MatchDetailsCollectionName { get; init; } = "MatchDetails";
+
     public string StatisticsCollectionName { get; init; } = "Statistics";
 
     public string UsersCollectionName { get; init; } = "Users";

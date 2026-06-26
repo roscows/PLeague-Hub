@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.Extensions.Caching.Memory;
 using PLeagueHub.Api.Models;
 using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Responses;
@@ -11,29 +10,31 @@ public interface IMatchDetailService
     Task<MatchDetailResponse?> GetAsync(string matchId, CancellationToken cancellationToken);
 }
 
+// Match detail (statistics, incidents, lineups) is fetched from FootApi on the
+// first view and persisted to MongoDB, so later views (and demos) read from the
+// database without any live FootApi call.
 public sealed class MatchDetailService : IMatchDetailService
 {
-    private static readonly TimeSpan FinishedTtl = TimeSpan.FromHours(24);
-    private static readonly TimeSpan LiveTtl = TimeSpan.FromMinutes(2);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly IRepository<Match> _matches;
     private readonly IRepository<Team> _teams;
+    private readonly IRepository<MatchDetailDocument> _details;
     private readonly IFootballProvider _provider;
     private readonly IProviderRequestPacer _pacer;
-    private readonly IMemoryCache _cache;
 
     public MatchDetailService(
         IRepository<Match> matches,
         IRepository<Team> teams,
+        IRepository<MatchDetailDocument> details,
         IFootballProvider provider,
-        IProviderRequestPacer pacer,
-        IMemoryCache cache)
+        IProviderRequestPacer pacer)
     {
         _matches = matches;
         _teams = teams;
+        _details = details;
         _provider = provider;
         _pacer = pacer;
-        _cache = cache;
     }
 
     public async Task<MatchDetailResponse?> GetAsync(string matchId, CancellationToken cancellationToken)
@@ -52,17 +53,22 @@ public sealed class MatchDetailService : IMatchDetailService
             return new MatchDetailResponse(header, [], [], null);
         }
 
-        var detail = await GetCachedDetailAsync(providerId, match.Status, cancellationToken);
+        var detail = await GetOrFetchDetailAsync(matchId, providerId, cancellationToken);
         return new MatchDetailResponse(header, detail.Statistics, detail.Incidents, detail.Lineups);
     }
 
-    private async Task<CachedDetail> GetCachedDetailAsync(int providerId, string status, CancellationToken cancellationToken)
+    private async Task<CachedDetail> GetOrFetchDetailAsync(string matchId, int providerId, CancellationToken cancellationToken)
     {
-        var cacheKey = $"match-detail:{providerId}";
+        var stored = await _details.FindOneAsync(document => document.MatchId == matchId, cancellationToken);
 
-        if (_cache.TryGetValue(cacheKey, out CachedDetail? cached) && cached is not null)
+        if (stored is not null)
         {
-            return cached;
+            var cached = JsonSerializer.Deserialize<CachedDetail>(stored.DetailJson, JsonOptions);
+
+            if (cached is not null)
+            {
+                return cached;
+            }
         }
 
         IReadOnlyCollection<FootballStatItem> stats;
@@ -84,9 +90,19 @@ public sealed class MatchDetailService : IMatchDetailService
             throw new MatchDetailUnavailableException("FootAPI match detail could not be loaded.", exception);
         }
 
-        cached = new CachedDetail(MapStats(stats), MapIncidents(incidents), MapLineups(lineups));
-        _cache.Set(cacheKey, cached, status == "zavrsena" ? FinishedTtl : LiveTtl);
-        return cached;
+        var detail = new CachedDetail(MapStats(stats), MapIncidents(incidents), MapLineups(lineups));
+
+        await _details.CreateAsync(
+            new MatchDetailDocument
+            {
+                MatchId = matchId,
+                ProviderId = providerId,
+                DetailJson = JsonSerializer.Serialize(detail, JsonOptions),
+                FetchedAt = DateTime.UtcNow
+            },
+            cancellationToken);
+
+        return detail;
     }
 
     private async Task<MatchHeaderDto> BuildHeaderAsync(Match match, CancellationToken cancellationToken)

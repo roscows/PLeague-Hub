@@ -17,6 +17,7 @@ public sealed class MongoIndexInitializer
         await CreateTeamIndexesAsync(cancellationToken);
         await CreatePlayerIndexesAsync(cancellationToken);
         await CreateMatchIndexesAsync(cancellationToken);
+        await CreateMatchDetailIndexesAsync(cancellationToken);
         await CreateStatisticIndexesAsync(cancellationToken);
         await CreateUserIndexesAsync(cancellationToken);
         await CreatePostIndexesAsync(cancellationToken);
@@ -89,6 +90,15 @@ public sealed class MongoIndexInitializer
         };
 
         await _context.Matches.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateMatchDetailIndexesAsync(CancellationToken cancellationToken)
+    {
+        var index = new CreateIndexModel<MatchDetailDocument>(
+            Builders<MatchDetailDocument>.IndexKeys.Ascending(detail => detail.MatchId),
+            new CreateIndexOptions { Name = "uq_matchDetails_match_id", Unique = true });
+
+        await _context.MatchDetails.Indexes.CreateOneAsync(index, cancellationToken: cancellationToken);
     }
 
     private async Task CreateStatisticIndexesAsync(CancellationToken cancellationToken)
