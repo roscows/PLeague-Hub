@@ -17,22 +17,12 @@ public sealed class StandingsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyCollection<StandingRowResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status502BadGateway)]
     public async Task<ActionResult<IReadOnlyCollection<StandingRowResponse>>> GetStandingsAsync(
-        [FromQuery] int seasonId = StandingsService.CurrentSeasonId,
+        [FromQuery] string? season,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var rows = await _standingsService.GetStandingsAsync(seasonId, cancellationToken);
-            return Ok(rows);
-        }
-        catch (StandingsUnavailableException exception)
-        {
-            return StatusCode(
-                StatusCodes.Status502BadGateway,
-                new { message = exception.Message });
-        }
+        var rows = await _standingsService.GetStandingsAsync(season ?? string.Empty, cancellationToken);
+        return Ok(rows);
     }
 
     [HttpGet("seasons")]

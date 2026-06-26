@@ -1,4 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
+using PLeagueHub.Api.Models;
+using PLeagueHub.Api.Repositories;
 using PLeagueHub.Api.Responses;
 
 namespace PLeagueHub.Api.Services.Football;
@@ -8,166 +9,149 @@ public interface IStandingsService
     Task<IReadOnlyCollection<SeasonResponse>> GetSeasonsAsync(CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<StandingRowResponse>> GetStandingsAsync(
-        int seasonId,
+        string season,
         CancellationToken cancellationToken);
 }
 
+// Standings are computed from the matches stored in MongoDB (no live FootApi
+// dependency), so the table is always available and consistent with Results.
 public sealed class StandingsService : IStandingsService
 {
-    public const int PremierLeagueTournamentId = 17;
-    public const int CurrentSeasonId = 96668;
+    private const string FinishedStatus = "zavrsena";
 
-    private static readonly TimeSpan CurrentSeasonTtl = TimeSpan.FromMinutes(10);
-    private static readonly TimeSpan PastSeasonTtl = TimeSpan.FromHours(24);
-    private static readonly TimeSpan SeasonsTtl = TimeSpan.FromHours(24);
+    private readonly IRepository<Match> _matches;
+    private readonly IRepository<Team> _teams;
 
-    private readonly IFootballProvider _footballProvider;
-    private readonly ITeamLogoCache _logoCache;
-    private readonly IProviderRequestPacer _requestPacer;
-    private readonly IMemoryCache _cache;
-
-    public StandingsService(
-        IFootballProvider footballProvider,
-        ITeamLogoCache logoCache,
-        IProviderRequestPacer requestPacer,
-        IMemoryCache cache)
+    public StandingsService(IRepository<Match> matches, IRepository<Team> teams)
     {
-        _footballProvider = footballProvider;
-        _logoCache = logoCache;
-        _requestPacer = requestPacer;
-        _cache = cache;
+        _matches = matches;
+        _teams = teams;
     }
 
-    public async Task<IReadOnlyCollection<SeasonResponse>> GetSeasonsAsync(
-        CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<SeasonResponse>> GetSeasonsAsync(CancellationToken cancellationToken)
     {
-        if (_cache.TryGetValue("standings:seasons", out IReadOnlyCollection<SeasonResponse>? cached)
-            && cached is not null)
-        {
-            return cached;
-        }
+        var matches = await _matches.GetAllAsync(cancellationToken);
 
-        IReadOnlyCollection<SeasonResponse> seasons;
-
-        try
-        {
-            var providerSeasons = await _footballProvider.GetSeasonsAsync(
-                PremierLeagueTournamentId,
-                cancellationToken);
-
-            seasons = providerSeasons
-                .Select(season => new SeasonResponse(
-                    season.Id,
-                    string.IsNullOrWhiteSpace(season.Year) ? season.Name : season.Year))
-                .ToArray();
-        }
-        catch (Exception exception) when (
-            exception is HttpRequestException or InvalidOperationException
-                or System.Text.Json.JsonException)
-        {
-            seasons = [new SeasonResponse(CurrentSeasonId, "Trenutna sezona")];
-        }
-
-        if (seasons.Count == 0)
-        {
-            seasons = [new SeasonResponse(CurrentSeasonId, "Trenutna sezona")];
-        }
-
-        _cache.Set("standings:seasons", seasons, SeasonsTtl);
-        return seasons;
+        return matches
+            .Select(match => match.Sezona)
+            .Where(season => !string.IsNullOrWhiteSpace(season))
+            .Distinct()
+            .OrderByDescending(season => season, StringComparer.Ordinal)
+            .Select(season => new SeasonResponse(season))
+            .ToArray();
     }
 
     public async Task<IReadOnlyCollection<StandingRowResponse>> GetStandingsAsync(
-        int seasonId,
+        string season,
         CancellationToken cancellationToken)
     {
-        var cacheKey = $"standings:{seasonId}";
-
-        if (_cache.TryGetValue(cacheKey, out IReadOnlyCollection<StandingRowResponse>? cached)
-            && cached is not null)
+        if (string.IsNullOrWhiteSpace(season))
         {
-            return cached;
+            return [];
         }
 
-        IReadOnlyCollection<FootballTeamStanding> standings;
+        var matches = (await _matches.GetAllAsync(cancellationToken))
+            .Where(match =>
+                string.Equals(match.Sezona, season, StringComparison.Ordinal)
+                && string.Equals(match.Status, FinishedStatus, StringComparison.Ordinal)
+                && match.GolDomacin.HasValue
+                && match.GolGost.HasValue)
+            .ToList();
 
-        try
+        var teams = (await _teams.GetAllAsync(cancellationToken))
+            .GroupBy(team => team.Id)
+            .ToDictionary(group => group.Key, group => group.First());
+
+        var table = new Dictionary<string, Tally>(StringComparer.Ordinal);
+
+        foreach (var match in matches)
         {
-            standings = await _footballProvider.GetTeamStandingsAsync(
-                PremierLeagueTournamentId,
-                seasonId,
-                cancellationToken);
-        }
-        catch (Exception exception) when (
-            exception is HttpRequestException or InvalidOperationException
-                or System.Text.Json.JsonException)
-        {
-            throw new StandingsUnavailableException(
-                "FootAPI standings could not be loaded.",
-                exception);
+            var home = GetTally(table, match.DomacinId);
+            var away = GetTally(table, match.GostId);
+            var homeGoals = match.GolDomacin!.Value;
+            var awayGoals = match.GolGost!.Value;
+
+            home.Apply(homeGoals, awayGoals);
+            away.Apply(awayGoals, homeGoals);
         }
 
-        var ordered = standings
-            .OrderByDescending(standing => standing.Points)
-            .ThenByDescending(standing => standing.GoalDifference)
-            .ThenByDescending(standing => standing.GoalsFor)
+        return table
+            .OrderByDescending(entry => entry.Value.Points)
+            .ThenByDescending(entry => entry.Value.GoalDifference)
+            .ThenByDescending(entry => entry.Value.GoalsFor)
+            .ThenBy(entry => TeamName(teams, entry.Key), StringComparer.Ordinal)
+            .Select((entry, index) => BuildRow(index + 1, teams, entry.Key, entry.Value))
             .ToArray();
-
-        var rows = new List<StandingRowResponse>(ordered.Length);
-
-        for (var index = 0; index < ordered.Length; index++)
-        {
-            var standing = ordered[index];
-            var logoUrl = await ResolveLogoUrlAsync(standing.ProviderId, cancellationToken);
-
-            rows.Add(new StandingRowResponse(
-                index + 1,
-                standing.ProviderId,
-                standing.Name,
-                standing.Abbreviation,
-                logoUrl,
-                standing.Played,
-                standing.Wins,
-                standing.Draws,
-                standing.Losses,
-                standing.GoalsFor,
-                standing.GoalsAgainst,
-                standing.GoalDifference,
-                standing.Points));
-        }
-
-        IReadOnlyCollection<StandingRowResponse> result = rows;
-        _cache.Set(cacheKey, result, seasonId == CurrentSeasonId ? CurrentSeasonTtl : PastSeasonTtl);
-        return result;
     }
 
-    private async Task<string> ResolveLogoUrlAsync(int providerId, CancellationToken cancellationToken)
+    private static Tally GetTally(Dictionary<string, Tally> table, string teamId)
     {
-        if (providerId <= 0)
+        if (!table.TryGetValue(teamId, out var tally))
         {
-            return string.Empty;
+            tally = new Tally();
+            table[teamId] = tally;
         }
 
-        if (_logoCache.Exists(providerId))
-        {
-            return _logoCache.GetPublicUrl(providerId);
-        }
+        return tally;
+    }
 
-        try
+    private static string TeamName(IReadOnlyDictionary<string, Team> teams, string teamId)
+        => teams.TryGetValue(teamId, out var team) ? team.Naziv : string.Empty;
+
+    private static StandingRowResponse BuildRow(
+        int position,
+        IReadOnlyDictionary<string, Team> teams,
+        string teamId,
+        Tally tally)
+    {
+        teams.TryGetValue(teamId, out var team);
+
+        return new StandingRowResponse(
+            position,
+            team?.ProviderId ?? 0,
+            team?.Naziv ?? "Nepoznat tim",
+            team?.Skracenica ?? string.Empty,
+            team?.LogoUrl ?? string.Empty,
+            tally.Played,
+            tally.Wins,
+            tally.Draws,
+            tally.Losses,
+            tally.GoalsFor,
+            tally.GoalsAgainst,
+            tally.GoalDifference,
+            tally.Points);
+    }
+
+    private sealed class Tally
+    {
+        public int Played { get; private set; }
+        public int Wins { get; private set; }
+        public int Draws { get; private set; }
+        public int Losses { get; private set; }
+        public int GoalsFor { get; private set; }
+        public int GoalsAgainst { get; private set; }
+
+        public int GoalDifference => GoalsFor - GoalsAgainst;
+        public int Points => (Wins * 3) + Draws;
+
+        public void Apply(int scored, int conceded)
         {
-            await _requestPacer.WaitAsync(cancellationToken);
-            var logo = await _footballProvider.GetTeamLogoAsync(providerId, cancellationToken);
-            await _logoCache.SaveAsync(providerId, logo, cancellationToken);
-            return _logoCache.GetPublicUrl(providerId);
-        }
-        catch (Exception exception) when (
-            exception is HttpRequestException
-                or InvalidDataException
-                or InvalidOperationException
-                or IOException
-                or UnauthorizedAccessException)
-        {
-            return string.Empty;
+            Played++;
+            GoalsFor += scored;
+            GoalsAgainst += conceded;
+
+            if (scored > conceded)
+            {
+                Wins++;
+            }
+            else if (scored < conceded)
+            {
+                Losses++;
+            }
+            else
+            {
+                Draws++;
+            }
         }
     }
 }

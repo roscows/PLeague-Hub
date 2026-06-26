@@ -6,9 +6,9 @@ export const standingsApi = {
     const response = await api.get<Season[]>('/api/standings/seasons');
     return response.data;
   },
-  async getStandings(seasonId: number) {
+  async getStandings(season: string) {
     const response = await api.get<StandingRow[]>('/api/standings', {
-      params: { seasonId }
+      params: { season }
     });
     return response.data;
   }

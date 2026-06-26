@@ -4,40 +4,35 @@ import { standingsApi } from '../services/standingsApi';
 import type { Season, StandingRow } from '../types/api';
 import { TeamLogo } from '../components/TeamLogo';
 
-const FALLBACK_SEASON: Season = { seasonId: 96668, label: 'Trenutna sezona' };
-
 export function TablePage() {
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [seasonId, setSeasonId] = useState<number | null>(null);
+  const [season, setSeason] = useState('');
   const [rows, setRows] = useState<StandingRow[]>([]);
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
 
   useEffect(() => {
     standingsApi.getSeasons()
-      .then((data) => {
-        const list = data.length > 0 ? data : [FALLBACK_SEASON];
-        setSeasons(list);
-        setSeasonId(list[0].seasonId);
-      })
-      .catch(() => {
-        setSeasons([FALLBACK_SEASON]);
-        setSeasonId(FALLBACK_SEASON.seasonId);
-      });
+      .then(setSeasons)
+      .catch(() => setSeasons([]));
   }, []);
 
+  const selectedSeason = season || seasons[0]?.season || '';
+
   useEffect(() => {
-    if (seasonId === null) {
+    if (!selectedSeason) {
+      setRows([]);
+      setStatus('ready');
       return;
     }
 
     setStatus('loading');
-    standingsApi.getStandings(seasonId)
+    standingsApi.getStandings(selectedSeason)
       .then((data) => {
         setRows(data);
         setStatus('ready');
       })
       .catch(() => setStatus('error'));
-  }, [seasonId]);
+  }, [selectedSeason]);
 
   return (
     <div className="space-y-4">
@@ -54,11 +49,11 @@ export function TablePage() {
             <select
               aria-label="Sezona"
               className="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand"
-              value={seasonId ?? ''}
-              onChange={(event) => setSeasonId(Number(event.target.value))}
+              value={selectedSeason}
+              onChange={(event) => setSeason(event.target.value)}
             >
-              {seasons.map((season) => (
-                <option key={season.seasonId} value={season.seasonId}>{season.label}</option>
+              {seasons.map((item) => (
+                <option key={item.season} value={item.season}>{item.season}</option>
               ))}
             </select>
           </label>
@@ -95,7 +90,7 @@ export function TablePage() {
               </thead>
               <tbody>
                 {rows.map((team) => (
-                  <tr key={team.providerId} className="border-b border-slate-100 hover:bg-slate-50">
+                  <tr key={team.position} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-3 py-3 text-xs font-bold text-slate-400">{team.position}</td>
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">

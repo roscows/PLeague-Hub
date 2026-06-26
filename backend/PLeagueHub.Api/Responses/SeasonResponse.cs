@@ -1,3 +1,3 @@
 namespace PLeagueHub.Api.Responses;
 
-public sealed record SeasonResponse(int SeasonId, string Label);
+public sealed record SeasonResponse(string Season);

@@ -394,8 +394,7 @@ export interface NewsSourceRequest {
 }
 
 export interface Season {
-  seasonId: number;
-  label: string;
+  season: string;
 }
 
 export interface StandingRow {
