@@ -63,6 +63,7 @@ builder.Services.AddScoped<TeamLogoSyncService>();
 builder.Services.AddScoped<IMatchSyncService, MatchSyncService>();
 builder.Services.AddScoped<IPlayerStatsSyncService, PlayerStatsSyncService>();
 builder.Services.AddScoped<IPlayerProfileService, PlayerProfileService>();
+builder.Services.AddScoped<IClubProfileService, ClubProfileService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<ITeamLogoCache, LocalTeamLogoCache>();
