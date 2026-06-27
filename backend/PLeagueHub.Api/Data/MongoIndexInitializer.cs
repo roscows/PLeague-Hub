@@ -18,6 +18,7 @@ public sealed class MongoIndexInitializer
         await CreatePlayerIndexesAsync(cancellationToken);
         await CreateMatchIndexesAsync(cancellationToken);
         await CreateMatchDetailIndexesAsync(cancellationToken);
+        await CreatePlayerSeasonStatIndexesAsync(cancellationToken);
         await CreateStatisticIndexesAsync(cancellationToken);
         await CreateUserIndexesAsync(cancellationToken);
         await CreatePostIndexesAsync(cancellationToken);
@@ -99,6 +100,17 @@ public sealed class MongoIndexInitializer
             new CreateIndexOptions { Name = "uq_matchDetails_match_id", Unique = true });
 
         await _context.MatchDetails.Indexes.CreateOneAsync(index, cancellationToken: cancellationToken);
+    }
+
+    private async Task CreatePlayerSeasonStatIndexesAsync(CancellationToken cancellationToken)
+    {
+        var index = new CreateIndexModel<PlayerSeasonStatDocument>(
+            Builders<PlayerSeasonStatDocument>.IndexKeys
+                .Ascending(stat => stat.Sezona)
+                .Descending(stat => stat.Golovi),
+            new CreateIndexOptions { Name = "idx_playerSeasonStats_sezona_golovi" });
+
+        await _context.PlayerSeasonStats.Indexes.CreateOneAsync(index, cancellationToken: cancellationToken);
     }
 
     private async Task CreateStatisticIndexesAsync(CancellationToken cancellationToken)

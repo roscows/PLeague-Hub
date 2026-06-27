@@ -28,6 +28,7 @@ public sealed class MongoContext
         Players = Database.GetCollection<Player>(settings.PlayersCollectionName);
         Matches = Database.GetCollection<Match>(settings.MatchesCollectionName);
         MatchDetails = Database.GetCollection<MatchDetailDocument>(settings.MatchDetailsCollectionName);
+        PlayerSeasonStats = Database.GetCollection<PlayerSeasonStatDocument>(settings.PlayerSeasonStatsCollectionName);
         Statistics = Database.GetCollection<Statistic>(settings.StatisticsCollectionName);
         Users = Database.GetCollection<User>(settings.UsersCollectionName);
         Posts = Database.GetCollection<Post>(settings.PostsCollectionName);
@@ -47,6 +48,8 @@ public sealed class MongoContext
     public IMongoCollection<Match> Matches { get; }
 
     public IMongoCollection<MatchDetailDocument> MatchDetails { get; }
+
+    public IMongoCollection<PlayerSeasonStatDocument> PlayerSeasonStats { get; }
 
     public IMongoCollection<Statistic> Statistics { get; }
 
@@ -73,6 +76,7 @@ public sealed class MongoContext
             var type when type == typeof(Player) => (IMongoCollection<TDocument>)Players,
             var type when type == typeof(Match) => (IMongoCollection<TDocument>)Matches,
             var type when type == typeof(MatchDetailDocument) => (IMongoCollection<TDocument>)MatchDetails,
+            var type when type == typeof(PlayerSeasonStatDocument) => (IMongoCollection<TDocument>)PlayerSeasonStats,
             var type when type == typeof(Statistic) => (IMongoCollection<TDocument>)Statistics,
             var type when type == typeof(User) => (IMongoCollection<TDocument>)Users,
             var type when type == typeof(Post) => (IMongoCollection<TDocument>)Posts,
