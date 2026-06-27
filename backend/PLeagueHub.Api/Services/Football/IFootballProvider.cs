@@ -50,4 +50,12 @@ public interface IFootballProvider
     Task<FootballTeamLogo> GetPlayerImageAsync(
         int playerId,
         CancellationToken cancellationToken = default);
+
+    Task<FootballTeamDetails?> GetTeamDetailsAsync(
+        int teamId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballRosterPlayer>> GetTeamPlayersAsync(
+        int teamId,
+        CancellationToken cancellationToken = default);
 }

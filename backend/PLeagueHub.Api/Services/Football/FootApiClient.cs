@@ -376,6 +376,73 @@ public sealed class FootApiClient : IFootballProvider
             player.Team?.Name ?? string.Empty);
     }
 
+    public async Task<FootballTeamDetails?> GetTeamDetailsAsync(
+        int teamId,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest($"/api/team/{teamId}");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var payload = await JsonSerializer.DeserializeAsync<FootApiTeamResponse>(
+            responseStream, JsonOptions, cancellationToken);
+
+        var team = payload?.Team;
+
+        if (team is null)
+        {
+            return null;
+        }
+
+        var founded = team.FoundationDateTimestamp is long timestamp
+            ? DateTimeOffset.FromUnixTimeSeconds(timestamp).Year
+            : 0;
+
+        return new FootballTeamDetails(
+            team.Id,
+            team.Name ?? string.Empty,
+            team.Venue?.Name ?? string.Empty,
+            founded,
+            team.Manager?.Name ?? string.Empty,
+            team.Country?.Name ?? string.Empty);
+    }
+
+    public async Task<IReadOnlyCollection<FootballRosterPlayer>> GetTeamPlayersAsync(
+        int teamId,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest($"/api/team/{teamId}/players");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
+        {
+            return [];
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var payload = await JsonSerializer.DeserializeAsync<FootApiTeamPlayersResponse>(
+            responseStream, JsonOptions, cancellationToken);
+
+        return (payload?.Players ?? [])
+            .Where(entry => entry.Player is not null)
+            .Select(entry => new FootballRosterPlayer(
+                entry.Player!.Id,
+                entry.Player.Name ?? string.Empty,
+                entry.Player.Position ?? string.Empty,
+                entry.Player.ShirtNumber ?? 0,
+                entry.Player.Country?.Name ?? string.Empty))
+            .ToArray();
+    }
+
     private static void Accumulate(
         IReadOnlyCollection<FootApiPlayerEntry>? entries,
         Dictionary<int, PlayerAccumulator> players,
@@ -558,4 +625,19 @@ public sealed class FootApiClient : IFootballProvider
         FootApiCountry? Country,
         FootApiTeamRef? Team);
     private sealed record FootApiCountry(string? Name);
+
+    private sealed record FootApiTeamResponse(FootApiTeamDetail? Team);
+    private sealed record FootApiTeamDetail(
+        int Id,
+        string? Name,
+        FootApiManager? Manager,
+        FootApiVenue? Venue,
+        long? FoundationDateTimestamp,
+        FootApiCountry? Country);
+    private sealed record FootApiManager(string? Name);
+    private sealed record FootApiVenue(string? Name);
+
+    private sealed record FootApiTeamPlayersResponse(IReadOnlyCollection<FootApiTeamPlayerEntry>? Players);
+    private sealed record FootApiTeamPlayerEntry(FootApiRosterPlayer? Player);
+    private sealed record FootApiRosterPlayer(int Id, string? Name, string? Position, int? ShirtNumber, FootApiCountry? Country);
 }
