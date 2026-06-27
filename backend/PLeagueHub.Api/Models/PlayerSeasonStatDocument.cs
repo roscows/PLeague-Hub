@@ -16,6 +16,9 @@ public sealed class PlayerSeasonStatDocument : BaseDocument
     [BsonElement("team_naziv")]
     public string TeamNaziv { get; set; } = string.Empty;
 
+    [BsonElement("team_provider_id")]
+    public int TeamProviderId { get; set; }
+
     [BsonElement("team_logo")]
     public string TeamLogoUrl { get; set; } = string.Empty;
 
