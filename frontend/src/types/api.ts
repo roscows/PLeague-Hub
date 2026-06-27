@@ -397,6 +397,17 @@ export interface Season {
   season: string;
 }
 
+export interface PlayerStat {
+  position: number;
+  providerId: number;
+  ime: string;
+  teamNaziv: string;
+  teamLogoUrl: string;
+  golovi: number;
+  asistencije: number;
+  odigrano: number;
+}
+
 export interface StandingRow {
   position: number;
   providerId: number;
