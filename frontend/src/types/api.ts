@@ -76,6 +76,7 @@ export interface Match {
 }
 
 export interface MatchTeamInfo {
+  providerId: number;
   naziv: string;
   skracenica: string;
   logoUrl: string;
@@ -401,11 +402,68 @@ export interface PlayerStat {
   position: number;
   providerId: number;
   ime: string;
+  teamProviderId: number;
   teamNaziv: string;
   teamLogoUrl: string;
   golovi: number;
   asistencije: number;
   odigrano: number;
+}
+
+export interface PlayerSeasonLine {
+  sezona: string;
+  teamNaziv: string;
+  teamProviderId: number;
+  golovi: number;
+  asistencije: number;
+  odigrano: number;
+}
+
+export interface PlayerProfile {
+  providerId: number;
+  ime: string;
+  pozicija: string;
+  drzava: string;
+  visina: number;
+  godine: number | null;
+  klubNaziv: string;
+  klubProviderId: number;
+  fotoUrl: string;
+  sezone: PlayerSeasonLine[];
+}
+
+export interface ClubMatch {
+  sezona: string;
+  datum: string;
+  protivnik: string;
+  protivnikLogo: string;
+  domaci: boolean;
+  golMi: number | null;
+  golProtivnik: number | null;
+  ishod: string;
+}
+
+export interface ClubRoster {
+  providerId: number;
+  ime: string;
+  pozicija: string;
+  broj: number;
+  drzava: string;
+}
+
+export interface ClubProfile {
+  providerId: number;
+  naziv: string;
+  logoUrl: string;
+  stadion: string;
+  osnovan: number;
+  trener: string;
+  drzava: string;
+  pozicija: number;
+  sezona: string;
+  forma: string[];
+  poslednjiMecevi: ClubMatch[];
+  roster: ClubRoster[];
 }
 
 export interface StandingRow {

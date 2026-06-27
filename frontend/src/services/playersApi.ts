@@ -1,7 +1,11 @@
-import type { Player, PlayerFilters, PlayerWriteRequest } from '../types/api';
+import type { Player, PlayerFilters, PlayerProfile, PlayerWriteRequest } from '../types/api';
 import { api } from './api';
 
 export const playersApi = {
+  async getProfile(providerId: number) {
+    const response = await api.get<PlayerProfile>(`/api/players/${providerId}`);
+    return response.data;
+  },
   async list(filters: PlayerFilters = {}) {
     const response = await api.get<Player[]>('/api/players', { params: filters });
     return response.data;
