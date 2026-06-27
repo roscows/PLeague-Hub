@@ -13,15 +13,18 @@ public sealed class IntegrationsController : ControllerBase
     private readonly TeamSyncService _teamSyncService;
     private readonly TeamLogoSyncService _teamLogoSyncService;
     private readonly IMatchSyncService _matchSyncService;
+    private readonly IPlayerStatsSyncService _playerStatsSyncService;
 
     public IntegrationsController(
         TeamSyncService teamSyncService,
         TeamLogoSyncService teamLogoSyncService,
-        IMatchSyncService matchSyncService)
+        IMatchSyncService matchSyncService,
+        IPlayerStatsSyncService playerStatsSyncService)
     {
         _teamSyncService = teamSyncService;
         _teamLogoSyncService = teamLogoSyncService;
         _matchSyncService = matchSyncService;
+        _playerStatsSyncService = playerStatsSyncService;
     }
 
     [HttpPost("sync/teams")]
@@ -98,6 +101,28 @@ public sealed class IntegrationsController : ControllerBase
             return Ok(result);
         }
         catch (MatchSyncException exception)
+        {
+            return StatusCode(
+                StatusCodes.Status502BadGateway,
+                new { message = exception.Message });
+        }
+    }
+
+    [HttpPost("sync/player-stats")]
+    [ProducesResponseType(typeof(PlayerStatsSyncResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<ActionResult<PlayerStatsSyncResponse>> SyncPlayerStatsAsync(
+        [FromQuery] int seasonId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await _playerStatsSyncService.SyncSeasonAsync(seasonId, cancellationToken);
+            return Ok(result);
+        }
+        catch (PlayerStatsSyncException exception)
         {
             return StatusCode(
                 StatusCodes.Status502BadGateway,
