@@ -65,6 +65,7 @@ builder.Services.AddScoped<IPlayerStatsSyncService, PlayerStatsSyncService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<ITeamLogoCache, LocalTeamLogoCache>();
+builder.Services.AddSingleton<IPlayerPhotoCache, LocalPlayerPhotoCache>();
 builder.Services.AddSingleton<IProviderRequestPacer, ProviderRequestPacer>();
 builder.Services.AddHttpClient<IFootballProvider, FootApiClient>((serviceProvider, client) =>
 {

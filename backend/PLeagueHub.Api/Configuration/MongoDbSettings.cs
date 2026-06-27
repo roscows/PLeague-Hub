@@ -16,6 +16,8 @@ public sealed class MongoDbSettings
 
     public string PlayerSeasonStatsCollectionName { get; init; } = "PlayerSeasonStats";
 
+    public string PlayerProfilesCollectionName { get; init; } = "PlayerProfiles";
+
     public string StatisticsCollectionName { get; init; } = "Statistics";
 
     public string UsersCollectionName { get; init; } = "Users";
