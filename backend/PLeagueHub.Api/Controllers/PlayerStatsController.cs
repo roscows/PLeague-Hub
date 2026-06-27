@@ -37,6 +37,7 @@ public sealed class PlayerStatsController : ControllerBase
                 index + 1,
                 stat.ProviderId,
                 stat.Ime,
+                stat.TeamProviderId,
                 stat.TeamNaziv,
                 stat.TeamLogoUrl,
                 stat.Golovi,

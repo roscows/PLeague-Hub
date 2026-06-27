@@ -4,6 +4,7 @@ public sealed record PlayerStatDto(
     int Position,
     int ProviderId,
     string Ime,
+    int TeamProviderId,
     string TeamNaziv,
     string TeamLogoUrl,
     int Golovi,

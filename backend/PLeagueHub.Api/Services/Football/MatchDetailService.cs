@@ -122,7 +122,7 @@ public sealed class MatchDetailService : IMatchDetailService
     }
 
     private static MatchTeamDto ToTeamDto(Team? team)
-        => new(team?.Naziv ?? "Nepoznat tim", team?.Skracenica ?? string.Empty, team?.LogoUrl ?? string.Empty);
+        => new(team?.ProviderId ?? 0, team?.Naziv ?? "Nepoznat tim", team?.Skracenica ?? string.Empty, team?.LogoUrl ?? string.Empty);
 
     private static IReadOnlyCollection<StatItemDto> MapStats(IReadOnlyCollection<FootballStatItem> stats)
         => stats.Select(item => new StatItemDto(item.Name, item.Home, item.Away)).ToArray();

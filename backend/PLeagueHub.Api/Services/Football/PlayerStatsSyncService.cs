@@ -82,6 +82,7 @@ public sealed class PlayerStatsSyncService : IPlayerStatsSyncService
             {
                 current.Ime = player.Name;
                 current.TeamNaziv = naziv;
+                current.TeamProviderId = player.TeamId;
                 current.TeamLogoUrl = logo;
                 current.Golovi = player.Goals;
                 current.Asistencije = player.Assists;
@@ -97,6 +98,7 @@ public sealed class PlayerStatsSyncService : IPlayerStatsSyncService
                     ProviderId = player.ProviderId,
                     Ime = player.Name,
                     TeamNaziv = naziv,
+                    TeamProviderId = player.TeamId,
                     TeamLogoUrl = logo,
                     Golovi = player.Goals,
                     Asistencije = player.Assists,

@@ -1,6 +1,6 @@
 namespace PLeagueHub.Api.Responses;
 
-public sealed record MatchTeamDto(string Naziv, string Skracenica, string LogoUrl);
+public sealed record MatchTeamDto(int ProviderId, string Naziv, string Skracenica, string LogoUrl);
 
 public sealed record MatchHeaderDto(
     MatchTeamDto Domacin,
