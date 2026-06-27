@@ -20,6 +20,7 @@ public sealed class MongoIndexInitializer
         await CreateMatchDetailIndexesAsync(cancellationToken);
         await CreatePlayerSeasonStatIndexesAsync(cancellationToken);
         await CreatePlayerProfileIndexesAsync(cancellationToken);
+        await CreateClubProfileIndexesAsync(cancellationToken);
         await CreateStatisticIndexesAsync(cancellationToken);
         await CreateUserIndexesAsync(cancellationToken);
         await CreatePostIndexesAsync(cancellationToken);
@@ -121,6 +122,15 @@ public sealed class MongoIndexInitializer
             new CreateIndexOptions { Name = "idx_playerProfiles_providerId", Unique = true });
 
         await _context.PlayerProfiles.Indexes.CreateOneAsync(index, cancellationToken: cancellationToken);
+    }
+
+    private async Task CreateClubProfileIndexesAsync(CancellationToken cancellationToken)
+    {
+        var index = new CreateIndexModel<ClubProfileDocument>(
+            Builders<ClubProfileDocument>.IndexKeys.Ascending(profile => profile.ProviderId),
+            new CreateIndexOptions { Name = "idx_clubProfiles_providerId", Unique = true });
+
+        await _context.ClubProfiles.Indexes.CreateOneAsync(index, cancellationToken: cancellationToken);
     }
 
     private async Task CreateStatisticIndexesAsync(CancellationToken cancellationToken)
