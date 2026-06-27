@@ -37,4 +37,9 @@ public interface IFootballProvider
     Task<FootballLineups?> GetMatchLineupsAsync(
         int eventId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FootballPlayerStat>> GetBestPlayersAsync(
+        int tournamentId,
+        int seasonId,
+        CancellationToken cancellationToken = default);
 }

@@ -296,6 +296,96 @@ public sealed class FootApiClient : IFootballProvider
         return new FootballLineupTeam(team.Formation ?? string.Empty, players);
     }
 
+    public async Task<IReadOnlyCollection<FootballPlayerStat>> GetBestPlayersAsync(
+        int tournamentId,
+        int seasonId,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest($"/api/tournament/{tournamentId}/season/{seasonId}/best-players");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
+        {
+            return [];
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var payload = await JsonSerializer.DeserializeAsync<FootApiBestPlayersResponse>(
+            responseStream, JsonOptions, cancellationToken);
+
+        var players = new Dictionary<int, PlayerAccumulator>();
+        Accumulate(payload?.TopPlayers?.Goals, players, isGoals: true);
+        Accumulate(payload?.TopPlayers?.Assists, players, isGoals: false);
+
+        return players.Values
+            .Select(player => new FootballPlayerStat(
+                player.Id, player.Name, player.TeamId, player.TeamName,
+                player.Goals, player.Assists, player.Appearances))
+            .ToArray();
+    }
+
+    private static void Accumulate(
+        IReadOnlyCollection<FootApiPlayerEntry>? entries,
+        Dictionary<int, PlayerAccumulator> players,
+        bool isGoals)
+    {
+        foreach (var entry in entries ?? [])
+        {
+            if (entry.Player is null)
+            {
+                continue;
+            }
+
+            if (!players.TryGetValue(entry.Player.Id, out var accumulator))
+            {
+                accumulator = new PlayerAccumulator { Id = entry.Player.Id };
+                players[entry.Player.Id] = accumulator;
+            }
+
+            if (string.IsNullOrEmpty(accumulator.Name))
+            {
+                accumulator.Name = entry.Player.Name ?? string.Empty;
+            }
+
+            if (entry.Team is not null && string.IsNullOrEmpty(accumulator.TeamName))
+            {
+                accumulator.TeamId = entry.Team.Id;
+                accumulator.TeamName = entry.Team.Name ?? string.Empty;
+            }
+
+            if (entry.Statistics is not null)
+            {
+                if (isGoals && entry.Statistics.Goals is int goals)
+                {
+                    accumulator.Goals = goals;
+                }
+
+                if (!isGoals && entry.Statistics.Assists is int assists)
+                {
+                    accumulator.Assists = assists;
+                }
+
+                if (entry.Statistics.Appearances is int appearances && accumulator.Appearances == 0)
+                {
+                    accumulator.Appearances = appearances;
+                }
+            }
+        }
+    }
+
+    private sealed class PlayerAccumulator
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int TeamId { get; set; }
+        public string TeamName { get; set; } = string.Empty;
+        public int Goals { get; set; }
+        public int Assists { get; set; }
+        public int Appearances { get; set; }
+    }
+
     private async Task<TPayload?> GetMatchResourceAsync<TPayload>(
         int eventId,
         string resource,
@@ -398,4 +488,13 @@ public sealed class FootApiClient : IFootballProvider
     private sealed record FootApiLineupsResponse(bool? Confirmed, FootApiLineupTeam? Home, FootApiLineupTeam? Away);
     private sealed record FootApiLineupTeam(string? Formation, IReadOnlyCollection<FootApiLineupEntry>? Players);
     private sealed record FootApiLineupEntry(FootApiNamed? Player, string? JerseyNumber, bool? Substitute, string? Position);
+
+    private sealed record FootApiBestPlayersResponse(FootApiTopPlayers? TopPlayers);
+    private sealed record FootApiTopPlayers(
+        IReadOnlyCollection<FootApiPlayerEntry>? Goals,
+        IReadOnlyCollection<FootApiPlayerEntry>? Assists);
+    private sealed record FootApiPlayerEntry(FootApiPlayerRef? Player, FootApiTeamRef? Team, FootApiPlayerStatistics? Statistics);
+    private sealed record FootApiPlayerRef(int Id, string? Name);
+    private sealed record FootApiTeamRef(int Id, string? Name);
+    private sealed record FootApiPlayerStatistics(int? Goals, int? Assists, int? Appearances);
 }
