@@ -42,4 +42,12 @@ public interface IFootballProvider
         int tournamentId,
         int seasonId,
         CancellationToken cancellationToken = default);
+
+    Task<FootballPlayerProfile?> GetPlayerProfileAsync(
+        int playerId,
+        CancellationToken cancellationToken = default);
+
+    Task<FootballTeamLogo> GetPlayerImageAsync(
+        int playerId,
+        CancellationToken cancellationToken = default);
 }

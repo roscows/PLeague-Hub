@@ -168,11 +168,21 @@ public sealed class FootApiClient : IFootballProvider
         return events.Values.ToArray();
     }
 
-    public async Task<FootballTeamLogo> GetTeamLogoAsync(
+    public Task<FootballTeamLogo> GetTeamLogoAsync(
         int providerId,
         CancellationToken cancellationToken = default)
+        => FetchImageAsync($"/api/team/{providerId}/image", cancellationToken);
+
+    public Task<FootballTeamLogo> GetPlayerImageAsync(
+        int playerId,
+        CancellationToken cancellationToken = default)
+        => FetchImageAsync($"/api/player/{playerId}/image", cancellationToken);
+
+    private async Task<FootballTeamLogo> FetchImageAsync(
+        string path,
+        CancellationToken cancellationToken)
     {
-        using var request = CreateRequest($"/api/team/{providerId}/image");
+        using var request = CreateRequest(path);
         using var response = await _httpClient.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
@@ -324,6 +334,46 @@ public sealed class FootApiClient : IFootballProvider
                 player.Id, player.Name, player.TeamId, player.TeamName,
                 player.Goals, player.Assists, player.Appearances))
             .ToArray();
+    }
+
+    public async Task<FootballPlayerProfile?> GetPlayerProfileAsync(
+        int playerId,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest($"/api/player/{playerId}");
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.NoContent)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var payload = await JsonSerializer.DeserializeAsync<FootApiPlayerResponse>(
+            responseStream, JsonOptions, cancellationToken);
+
+        var player = payload?.Player;
+
+        if (player is null)
+        {
+            return null;
+        }
+
+        DateTime? dateOfBirth = player.DateOfBirthTimestamp is long timestamp
+            ? DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime
+            : null;
+
+        return new FootballPlayerProfile(
+            player.Id,
+            player.Name ?? string.Empty,
+            player.Position ?? string.Empty,
+            player.Height ?? 0,
+            dateOfBirth,
+            player.Country?.Name ?? string.Empty,
+            player.Team?.Id ?? 0,
+            player.Team?.Name ?? string.Empty);
     }
 
     private static void Accumulate(
@@ -497,4 +547,15 @@ public sealed class FootApiClient : IFootballProvider
     private sealed record FootApiPlayerRef(int Id, string? Name);
     private sealed record FootApiTeamRef(int Id, string? Name);
     private sealed record FootApiPlayerStatistics(int? Goals, int? Assists, int? Appearances);
+
+    private sealed record FootApiPlayerResponse(FootApiPlayerDetail? Player);
+    private sealed record FootApiPlayerDetail(
+        int Id,
+        string? Name,
+        string? Position,
+        int? Height,
+        long? DateOfBirthTimestamp,
+        FootApiCountry? Country,
+        FootApiTeamRef? Team);
+    private sealed record FootApiCountry(string? Name);
 }
