@@ -298,6 +298,26 @@ export interface SearchResult {
   imageUrl: string;
 }
 
+export type ReportCategory = 'spam' | 'uvrede' | 'offtopic' | 'ostalo';
+
+export interface CreateReportRequest {
+  kategorija: ReportCategory;
+  opis?: string;
+}
+
+export interface CommentReport {
+  id: string;
+  komentarId: string;
+  postId: string;
+  komentarTekst: string;
+  autorId: string;
+  autorUsername: string;
+  prijavioUsername: string;
+  kategorija: ReportCategory;
+  opis: string;
+  datumPrijave: string;
+}
+
 export type NewsCategory = 'premier_league' | 'transferi' | 'fpl' | 'klubovi';
 export type NewsReliability = 'zvanicno' | 'pouzdan_izvor' | 'glasina' | 'fpl_analiza';
 
