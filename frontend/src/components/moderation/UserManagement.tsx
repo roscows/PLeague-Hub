@@ -96,11 +96,13 @@ export function UserManagement() {
             </select>
           )}
           <button
-            className="inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
+            aria-label={`Moderisi korisnika ${user.username}`}
+            className="grid size-7 place-items-center rounded border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-brand"
             onClick={() => moderate(user)}
+            title="Moderisi"
             type="button"
           >
-            <UserCog size={13} /> Moderisi
+            <UserCog size={14} />
           </button>
         </div>
       </li>
