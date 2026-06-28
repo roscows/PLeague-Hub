@@ -1,6 +1,8 @@
 import { ShieldAlert, Trash2, UserCog, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ModerationModal } from '../components/forum/ModerationModal';
+import { ActivityFeed } from '../components/moderation/ActivityFeed';
+import { StaffNotices } from '../components/moderation/StaffNotices';
 import { RelativeTime } from '../components/RelativeTime';
 import { getApiErrorMessage } from '../services/apiError';
 import { moderationApi } from '../services/moderationApi';
@@ -67,14 +69,16 @@ export function ModerationPanel() {
         <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-brand">
           <ShieldAlert size={13} /> Moderacija
         </p>
-        <h1 className="mt-1 text-xl font-extrabold">
-          Prijave komentara
-          {reports.length > 0 && (
-            <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white align-middle">{reports.length}</span>
-          )}
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">Pregled prijavljenih komentara koji cekaju odluku.</p>
+        <h1 className="mt-1 text-xl font-extrabold">Moderacija</h1>
+        <p className="mt-1 text-sm text-slate-500">Centar za moderaciju zajednice.</p>
       </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <StaffNotices />
+        <ActivityFeed />
+      </div>
+
+      <h2 className="px-1 pt-2 text-sm font-extrabold text-slate-700">Prijave komentara{reports.length > 0 ? ` (${reports.length})` : ''}</h2>
 
       {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
