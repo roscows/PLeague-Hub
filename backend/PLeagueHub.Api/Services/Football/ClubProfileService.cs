@@ -183,6 +183,7 @@ public sealed class ClubProfileService : IClubProfileService
         var ishod = golMi > golProtivnik ? "W" : golMi < golProtivnik ? "L" : "D";
 
         return new ClubMatchDto(
+            match.Id ?? string.Empty,
             match.Sezona,
             match.Datum.ToString("o"),
             opponent?.Naziv ?? "Nepoznat tim",

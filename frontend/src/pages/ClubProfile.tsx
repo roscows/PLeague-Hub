@@ -91,14 +91,16 @@ export function ClubProfilePage() {
           <h2 className="bg-ink px-4 py-2 text-[11px] font-bold uppercase text-slate-300">Poslednji mecevi</h2>
           <ul className="divide-y divide-slate-100">
             {club.poslednjiMecevi.map((match, index) => (
-              <li key={index} className="flex items-center gap-3 px-4 py-2 text-sm">
-                <span className={`grid size-5 shrink-0 place-items-center rounded text-[10px] font-black ${FORM_STYLES[match.ishod] ?? 'bg-slate-200'}`}>
-                  {match.ishod}
-                </span>
-                <span className="text-[10px] font-semibold uppercase text-slate-400">{match.domaci ? 'DOM' : 'GOST'}</span>
-                <TeamLogo className="size-5" logoUrl={match.protivnikLogo} name={match.protivnik} />
-                <span className="flex-1 truncate font-semibold">{match.protivnik}</span>
-                <span className="font-black">{match.golMi} : {match.golProtivnik}</span>
+              <li key={match.mecId || index}>
+                <Link to={`/mec/${match.mecId}`} className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-50">
+                  <span className={`grid size-5 shrink-0 place-items-center rounded text-[10px] font-black ${FORM_STYLES[match.ishod] ?? 'bg-slate-200'}`}>
+                    {match.ishod}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase text-slate-400">{match.domaci ? 'DOM' : 'GOST'}</span>
+                  <TeamLogo className="size-5" logoUrl={match.protivnikLogo} name={match.protivnik} />
+                  <span className="flex-1 truncate font-semibold">{match.protivnik}</span>
+                  <span className="font-black">{match.golMi} : {match.golProtivnik}</span>
+                </Link>
               </li>
             ))}
           </ul>

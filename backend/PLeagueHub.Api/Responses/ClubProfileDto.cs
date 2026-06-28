@@ -15,6 +15,7 @@ public sealed record ClubProfileDto(
     IReadOnlyCollection<ClubRosterDto> Roster);
 
 public sealed record ClubMatchDto(
+    string MecId,
     string Sezona,
     string Datum,
     string Protivnik,

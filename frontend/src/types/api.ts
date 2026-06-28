@@ -482,6 +482,7 @@ export interface PlayerProfile {
 }
 
 export interface ClubMatch {
+  mecId: string;
   sezona: string;
   datum: string;
   protivnik: string;
