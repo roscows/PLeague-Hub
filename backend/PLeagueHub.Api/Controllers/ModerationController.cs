@@ -15,16 +15,52 @@ public sealed class ModerationController : ControllerBase
 {
     private readonly IModerationRepository _repository;
     private readonly IModerationService _service;
+    private readonly ICommentReportService _reportService;
     private readonly TimeProvider _timeProvider;
 
     public ModerationController(
         IModerationRepository repository,
         IModerationService service,
+        ICommentReportService reportService,
         TimeProvider timeProvider)
     {
         _repository = repository;
         _service = service;
+        _reportService = reportService;
         _timeProvider = timeProvider;
+    }
+
+    [HttpGet("reports")]
+    [ProducesResponseType(typeof(IReadOnlyCollection<CommentReportDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyCollection<CommentReportDto>>> GetReportsAsync(
+        CancellationToken cancellationToken)
+    {
+        return Ok(await _reportService.GetPendingAsync(cancellationToken));
+    }
+
+    [HttpPost("reports/{id}/resolve")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResolveReportAsync(
+        string id,
+        ResolveReportRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _reportService.ResolveAsync(
+            id,
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+            request.Akcija,
+            cancellationToken);
+
+        return result switch
+        {
+            ReportResolveResult.Resolved => NoContent(),
+            ReportResolveResult.NotFound => NotFound(),
+            _ => BadRequest(new { message = "Neispravna akcija." })
+        };
     }
 
     [HttpPost("users/{id}/actions")]
