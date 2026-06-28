@@ -319,6 +319,33 @@ export interface CommentReport {
   datumPrijave: string;
 }
 
+export interface StaffNotice {
+  id: string;
+  tekst: string;
+  autorUsername: string;
+  pinovano: boolean;
+  datumKreiranja: string;
+}
+
+export interface ModerationActivity {
+  id: string;
+  akcija: string;
+  tipMere: string | null;
+  moderatorUsername: string;
+  korisnikUsername: string;
+  razlog: string | null;
+  datum: string;
+}
+
+export interface PanelUser {
+  id: string;
+  username: string;
+  email: string;
+  uloga: Role;
+  aktivan: boolean;
+  aktivnaMera: string | null;
+}
+
 export type NewsCategory = 'premier_league' | 'transferi' | 'fpl' | 'klubovi';
 export type NewsReliability = 'zvanicno' | 'pouzdan_izvor' | 'glasina' | 'fpl_analiza';
 
