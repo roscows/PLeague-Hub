@@ -123,7 +123,7 @@ export function GlobalSearch() {
                   key={`${result.type}-${result.id}`}
                   className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 px-3 py-2.5 hover:bg-slate-50"
                   onClick={() => setIsOpen(false)}
-                  to={`/stats?${result.type}Id=${result.id}`}
+                  to={result.type === 'team' ? `/klub/${result.providerId}` : `/igrac/${result.providerId}`}
                 >
                   <span className="grid size-9 place-items-center rounded-md bg-slate-100">
                     {result.type === 'team' ? (

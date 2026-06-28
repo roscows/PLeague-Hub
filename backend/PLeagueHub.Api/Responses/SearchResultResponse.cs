@@ -4,6 +4,8 @@ public sealed record SearchResultResponse
 {
     public string Id { get; init; } = string.Empty;
 
+    public int ProviderId { get; init; }
+
     public string Type { get; init; } = string.Empty;
 
     public string Name { get; init; } = string.Empty;

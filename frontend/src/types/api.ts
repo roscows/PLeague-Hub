@@ -291,6 +291,7 @@ export type StatisticWriteRequest = Omit<Statistic, 'id'>;
 
 export interface SearchResult {
   id: string;
+  providerId: number;
   type: 'player' | 'team';
   name: string;
   subtitle: string;
