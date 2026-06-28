@@ -30,6 +30,8 @@ public sealed class MongoDbSettings
 
     public string CommentReportsCollectionName { get; init; } = "CommentReports";
 
+    public string StaffNoticesCollectionName { get; init; } = "StaffNotices";
+
     public string CommentVotesCollectionName { get; init; } = "CommentVotes";
 
     public string ModerationActionsCollectionName { get; init; } = "ModerationActions";

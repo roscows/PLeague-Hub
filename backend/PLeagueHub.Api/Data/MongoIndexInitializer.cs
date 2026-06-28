@@ -26,6 +26,7 @@ public sealed class MongoIndexInitializer
         await CreatePostIndexesAsync(cancellationToken);
         await CreateCommentIndexesAsync(cancellationToken);
         await CreateCommentReportIndexesAsync(cancellationToken);
+        await CreateStaffNoticeIndexesAsync(cancellationToken);
         await CreateCommentVoteIndexesAsync(cancellationToken);
         await CreateModerationActionIndexesAsync(cancellationToken);
         await CreateNewsSourceIndexesAsync(cancellationToken);
@@ -238,6 +239,17 @@ public sealed class MongoIndexInitializer
         };
 
         await _context.CommentReports.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateStaffNoticeIndexesAsync(CancellationToken cancellationToken)
+    {
+        var index = new CreateIndexModel<StaffNoticeDocument>(
+            Builders<StaffNoticeDocument>.IndexKeys
+                .Descending(notice => notice.Pinovano)
+                .Descending(notice => notice.DatumKreiranja),
+            new CreateIndexOptions { Name = "idx_staffNotices_pin_datum" });
+
+        await _context.StaffNotices.Indexes.CreateOneAsync(index, cancellationToken: cancellationToken);
     }
 
     private async Task CreateCommentVoteIndexesAsync(CancellationToken cancellationToken)
