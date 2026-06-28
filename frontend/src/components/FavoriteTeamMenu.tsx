@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/apiError';
+import { teamsApi } from '../services/teamsApi';
 import { usersApi } from '../services/usersApi';
 import type { Team } from '../types/api';
 import { TeamLogo } from './TeamLogo';
@@ -18,6 +19,19 @@ export function FavoriteTeamMenu({ teams, selectedTeam }: FavoriteTeamMenuProps)
   const [isOpen, setIsOpen] = useState(false);
   const [pendingTeamId, setPendingTeamId] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [availableTeams, setAvailableTeams] = useState<Team[]>(teams);
+
+  useEffect(() => {
+    if (teams.length > 0) setAvailableTeams(teams);
+  }, [teams]);
+
+  // The header loads teams once; if that call failed (e.g. API restarting) the
+  // list would stay empty. Fetch on open so the menu always offers the teams.
+  useEffect(() => {
+    if (isOpen && availableTeams.length === 0) {
+      teamsApi.list().then(setAvailableTeams).catch(() => undefined);
+    }
+  }, [isOpen, availableTeams.length]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -88,7 +102,7 @@ export function FavoriteTeamMenu({ teams, selectedTeam }: FavoriteTeamMenuProps)
               label="Bez omiljenog kluba"
               onSelect={() => selectTeam(null)}
             />
-            {teams.map((team) => (
+            {availableTeams.map((team) => (
               <TeamOption
                 isPending={pendingTeamId === team.id}
                 isSelected={selectedTeam?.id === team.id}
