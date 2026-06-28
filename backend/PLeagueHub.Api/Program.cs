@@ -40,6 +40,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddScoped<ICommentReportService, CommentReportService>();
+builder.Services.AddScoped<IStaffNoticeService, StaffNoticeService>();
 builder.Services.AddScoped<INewsIngestionService, NewsIngestionService>();
 builder.Services.AddSingleton<NewsRelevanceFilter>();
 builder.Services.AddHostedService<NewsIngestionWorker>();

@@ -16,19 +16,65 @@ public sealed class ModerationController : ControllerBase
     private readonly IModerationRepository _repository;
     private readonly IModerationService _service;
     private readonly ICommentReportService _reportService;
+    private readonly IStaffNoticeService _noticeService;
     private readonly TimeProvider _timeProvider;
 
     public ModerationController(
         IModerationRepository repository,
         IModerationService service,
         ICommentReportService reportService,
+        IStaffNoticeService noticeService,
         TimeProvider timeProvider)
     {
         _repository = repository;
         _service = service;
         _reportService = reportService;
+        _noticeService = noticeService;
         _timeProvider = timeProvider;
     }
+
+    [HttpGet("notices")]
+    [ProducesResponseType(typeof(IReadOnlyCollection<StaffNoticeDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyCollection<StaffNoticeDto>>> GetNoticesAsync(CancellationToken cancellationToken)
+        => Ok(await _noticeService.GetAllAsync(cancellationToken));
+
+    [HttpPost("notices")]
+    [ProducesResponseType(typeof(StaffNoticeDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<StaffNoticeDto>> CreateNoticeAsync(
+        CreateStaffNoticeRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Tekst))
+        {
+            return BadRequest(new { message = "Tekst obavestenja je obavezan." });
+        }
+
+        var notice = await _noticeService.CreateAsync(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+            request.Tekst,
+            cancellationToken);
+
+        return StatusCode(StatusCodes.Status201Created, notice);
+    }
+
+    [HttpDelete("notices/{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteNoticeAsync(string id, CancellationToken cancellationToken)
+        => await _noticeService.DeleteAsync(id, cancellationToken) ? NoContent() : NotFound();
+
+    [HttpPost("notices/{id}/pin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PinNoticeAsync(string id, CancellationToken cancellationToken)
+        => await _noticeService.SetPinnedAsync(id, true, cancellationToken) ? NoContent() : NotFound();
+
+    [HttpDelete("notices/{id}/pin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnpinNoticeAsync(string id, CancellationToken cancellationToken)
+        => await _noticeService.SetPinnedAsync(id, false, cancellationToken) ? NoContent() : NotFound();
 
     [HttpGet("reports")]
     [ProducesResponseType(typeof(IReadOnlyCollection<CommentReportDto>), StatusCodes.Status200OK)]
