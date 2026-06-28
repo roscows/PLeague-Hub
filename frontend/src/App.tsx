@@ -13,6 +13,8 @@ import { Results } from './pages/Results';
 import { Stats } from './pages/Stats';
 import { TablePage } from './pages/Table';
 import { MatchDetailPage } from './pages/MatchDetail';
+import { PlayerProfilePage } from './pages/PlayerProfile';
+import { ClubProfilePage } from './pages/ClubProfile';
 
 export function App() {
   return (
@@ -22,6 +24,8 @@ export function App() {
         <Route path="results" element={<Results />} />
         <Route path="mec/:id" element={<MatchDetailPage />} />
         <Route path="stats" element={<Stats />} />
+        <Route path="igrac/:id" element={<PlayerProfilePage />} />
+        <Route path="klub/:id" element={<ClubProfilePage />} />
         <Route path="tabela" element={<TablePage />} />
         <Route path="news" element={<News />} />
         <Route path="news/:id" element={<NewsDetailPage />} />

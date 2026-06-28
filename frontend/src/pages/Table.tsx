@@ -1,5 +1,6 @@
 import { ListOrdered } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { standingsApi } from '../services/standingsApi';
 import type { Season, StandingRow } from '../types/api';
 import { TeamLogo } from '../components/TeamLogo';
@@ -93,10 +94,17 @@ export function TablePage() {
                   <tr key={team.position} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-3 py-3 text-xs font-bold text-slate-400">{team.position}</td>
                     <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <TeamLogo className="size-6" logoUrl={team.logoUrl} name={team.naziv} />
-                        <span className="text-xs font-semibold">{team.naziv}</span>
-                      </div>
+                      {team.providerId > 0 ? (
+                        <Link to={`/klub/${team.providerId}`} className="flex items-center gap-2 hover:text-brand">
+                          <TeamLogo className="size-6" logoUrl={team.logoUrl} name={team.naziv} />
+                          <span className="text-xs font-semibold">{team.naziv}</span>
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <TeamLogo className="size-6" logoUrl={team.logoUrl} name={team.naziv} />
+                          <span className="text-xs font-semibold">{team.naziv}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-center text-xs">{team.odigrano}</td>
                     <td className="px-3 py-3 text-center text-xs">{team.pobede}</td>

@@ -1,5 +1,6 @@
 import { Search, TrendingUp } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { playerStatsApi } from '../services/playerStatsApi';
 import { standingsApi } from '../services/standingsApi';
 import type { PlayerStat, Season } from '../types/api';
@@ -117,12 +118,23 @@ export function Stats() {
                 {visible.map((player, index) => (
                   <tr key={player.providerId} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3 text-xs font-bold text-slate-400">{index + 1}</td>
-                    <td className="px-4 py-3 font-bold">{player.ime}</td>
+                    <td className="px-4 py-3 font-bold">
+                      <Link to={`/igrac/${player.providerId}`} className="hover:text-brand hover:underline">
+                        {player.ime}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <TeamLogo className="size-6" logoUrl={player.teamLogoUrl} name={player.teamNaziv} />
-                        <span className="text-xs font-semibold">{player.teamNaziv}</span>
-                      </div>
+                      {player.teamProviderId > 0 ? (
+                        <Link to={`/klub/${player.teamProviderId}`} className="flex items-center gap-2 hover:text-brand">
+                          <TeamLogo className="size-6" logoUrl={player.teamLogoUrl} name={player.teamNaziv} />
+                          <span className="text-xs font-semibold">{player.teamNaziv}</span>
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <TeamLogo className="size-6" logoUrl={player.teamLogoUrl} name={player.teamNaziv} />
+                          <span className="text-xs font-semibold">{player.teamNaziv}</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right font-black">{player.golovi}</td>
                     <td className="px-4 py-3 text-right font-black">{player.asistencije}</td>

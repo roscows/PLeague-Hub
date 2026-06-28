@@ -2,12 +2,29 @@ import { ArrowLeft, Goal, RectangleVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { matchDetailApi } from '../services/matchDetailApi';
-import type { MatchDetail } from '../types/api';
+import type { MatchDetail, MatchTeamInfo } from '../types/api';
 import { TeamLogo } from '../components/TeamLogo';
 
 function statPercent(value: string): number {
   const parsed = Number.parseFloat(value.replace('%', ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function ClubLink({ team }: { team: MatchTeamInfo }) {
+  const content = (
+    <>
+      <TeamLogo className="size-12" logoUrl={team.logoUrl} name={team.naziv} />
+      <span className="text-sm font-bold">{team.naziv}</span>
+    </>
+  );
+
+  return team.providerId > 0 ? (
+    <Link to={`/klub/${team.providerId}`} className="flex flex-col items-center gap-2 text-center hover:text-brand">
+      {content}
+    </Link>
+  ) : (
+    <div className="flex flex-col items-center gap-2 text-center">{content}</div>
+  );
 }
 
 export function MatchDetailPage() {
@@ -52,10 +69,7 @@ export function MatchDetailPage() {
           {header.sezona} · {header.kolo}. kolo
         </p>
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <TeamLogo className="size-12" logoUrl={header.domacin.logoUrl} name={header.domacin.naziv} />
-            <span className="text-sm font-bold">{header.domacin.naziv}</span>
-          </div>
+          <ClubLink team={header.domacin} />
           <div className="text-center">
             {played ? (
               <p className="text-3xl font-black">{header.golDomacin} : {header.golGost}</p>
@@ -68,10 +82,7 @@ export function MatchDetailPage() {
             )}
             <p className="mt-1 text-[10px] font-semibold uppercase text-slate-400">{header.status}</p>
           </div>
-          <div className="flex flex-col items-center gap-2 text-center">
-            <TeamLogo className="size-12" logoUrl={header.gost.logoUrl} name={header.gost.naziv} />
-            <span className="text-sm font-bold">{header.gost.naziv}</span>
-          </div>
+          <ClubLink team={header.gost} />
         </div>
       </section>
 
