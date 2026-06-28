@@ -5,6 +5,7 @@ import { RelativeTime } from '../components/RelativeTime';
 import { ForumReplyForm } from '../components/forum/ForumReplyForm';
 import { ForumThread } from '../components/forum/ForumThread';
 import { ModerationModal } from '../components/forum/ModerationModal';
+import { ReportCommentModal } from '../components/forum/ReportCommentModal';
 import { NewsBadge } from '../components/news/NewsBadge';
 import { NewsEditor } from '../components/news/NewsEditor';
 import { XEmbed } from '../components/news/XEmbed';
@@ -34,6 +35,7 @@ export function NewsDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{ comment: ForumCommentNode; state: ModerationState | null } | null>(null);
+  const [reportTarget, setReportTarget] = useState<ForumCommentNode | null>(null);
   const canEdit = user?.uloga === 'moderator' || user?.uloga === 'administrator';
   const editorOpen = canEdit && searchParams.get('edit') === '1';
 
@@ -231,6 +233,10 @@ export function NewsDetailPage() {
                 setRootReplyOpen(false);
                 setReplyingTo(commentId);
               }}
+              onReport={(comment) => {
+                if (!requireAuthentication()) return;
+                setReportTarget(comment);
+              }}
               onSubmitReply={submitReply}
               onTogglePin={togglePin}
               onVote={vote}
@@ -244,6 +250,13 @@ export function NewsDetailPage() {
           onChanged={() => setModerationTarget(null)}
           onClose={() => setModerationTarget(null)}
           target={{ id: moderationTarget.comment.autorId, username: moderationTarget.comment.autorUsername, role: moderationTarget.comment.autorUloga }}
+        />
+      )}
+      {reportTarget && (
+        <ReportCommentModal
+          commentId={reportTarget.id}
+          onClose={() => setReportTarget(null)}
+          onReported={() => setMutationError(null)}
         />
       )}
     </div>

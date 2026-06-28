@@ -5,6 +5,7 @@ import { RelativeTime } from '../components/RelativeTime';
 import { ForumReplyForm } from '../components/forum/ForumReplyForm';
 import { ForumThread } from '../components/forum/ForumThread';
 import { ModerationModal } from '../components/forum/ModerationModal';
+import { ReportCommentModal } from '../components/forum/ReportCommentModal';
 import { useAuth } from '../contexts/AuthContext';
 import { getApiErrorMessage } from '../services/apiError';
 import { forumApi } from '../services/forumApi';
@@ -25,6 +26,7 @@ export function ForumDiscussionPage() {
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{ comment: ForumCommentNode; state: ModerationState | null } | null>(null);
+  const [reportTarget, setReportTarget] = useState<ForumCommentNode | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -90,6 +92,11 @@ export function ForumDiscussionPage() {
     if (isAuthenticated) return true;
     navigate('/login', { state: { from: location.pathname } });
     return false;
+  }
+
+  function openReport(comment: ForumCommentNode) {
+    if (!requireAuthentication()) return;
+    setReportTarget(comment);
   }
 
   function startReply(commentId: string) {
@@ -195,9 +202,17 @@ export function ForumDiscussionPage() {
           onDelete={deleteComment}
           onModerate={openModeration}
           onReply={startReply}
+          onReport={openReport}
           onSubmitReply={submitReply}
           onTogglePin={togglePin}
           onVote={vote}
+        />
+      )}
+      {reportTarget && (
+        <ReportCommentModal
+          commentId={reportTarget.id}
+          onClose={() => setReportTarget(null)}
+          onReported={() => setMutationError(null)}
         />
       )}
       {moderationTarget && (

@@ -16,6 +16,7 @@ interface ForumThreadProps {
   onModerate: (comment: ForumCommentNode) => void;
   onTogglePin: (comment: ForumCommentNode) => void;
   onDelete: (comment: ForumCommentNode) => void;
+  onReport: (comment: ForumCommentNode) => void;
 }
 
 export function ForumThread(props: ForumThreadProps) {
@@ -43,6 +44,7 @@ export function ForumThread(props: ForumThreadProps) {
           onDelete={() => props.onDelete(node)}
           onModerate={() => props.onModerate(node)}
           onReply={props.onReply}
+          onReport={() => props.onReport(node)}
           onSubmitReply={props.onSubmitReply}
           onTogglePin={() => props.onTogglePin(node)}
           onVote={props.onVote}

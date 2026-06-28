@@ -1,4 +1,4 @@
-import { MessageSquareReply, Pin, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Flag, MessageSquareReply, Pin, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { CommentVoteValue, ForumCommentNode } from '../../types/api';
 import { RelativeTime } from '../RelativeTime';
 import { TeamLogo } from '../TeamLogo';
@@ -18,6 +18,7 @@ interface ForumCommentProps {
   onModerate: () => void;
   onTogglePin: () => void;
   onDelete: () => void;
+  onReport: () => void;
 }
 
 function roleLabel(role: string) {
@@ -37,7 +38,8 @@ export function ForumComment({
   canModerate,
   onModerate,
   onTogglePin,
-  onDelete
+  onDelete,
+  onReport
 }: ForumCommentProps) {
   const ownComment = currentUserId === comment.autorId;
   const voteDisabled = ownComment || comment.obrisan;
@@ -95,6 +97,17 @@ export function ForumComment({
             >
               <MessageSquareReply size={14} /> Odgovori
             </button>
+            {currentUserId && !ownComment && (
+              <button
+                aria-label={`Prijavi komentar #${comment.broj}`}
+                className="flex items-center gap-1 rounded px-2 py-1 hover:bg-slate-100 hover:text-red-600"
+                onClick={onReport}
+                title="Prijavi komentar"
+                type="button"
+              >
+                <Flag size={14} />
+              </button>
+            )}
             <button
               aria-label={`Svidja mi se komentaru #${comment.broj}`}
               aria-pressed={comment.trenutniGlas === 1}
