@@ -7,6 +7,7 @@ public sealed record CommentReportDto(
     string KomentarTekst,
     string AutorId,
     string AutorUsername,
+    string AutorUloga,
     string PrijavioUsername,
     string Kategorija,
     string Opis,

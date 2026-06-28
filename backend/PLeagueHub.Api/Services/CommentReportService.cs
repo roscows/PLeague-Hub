@@ -147,6 +147,7 @@ public sealed class CommentReportService : ICommentReportService
                 comment.Tekst,
                 comment.AutorId,
                 author?.Username ?? "Nepoznat",
+                author?.Uloga ?? "registrovani",
                 reporter?.Username ?? "Nepoznat",
                 report.Kategorija,
                 report.Opis,

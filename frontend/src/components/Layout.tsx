@@ -7,7 +7,8 @@ import {
   LogIn,
   LogOut,
   MessagesSquare,
-  Newspaper
+  Newspaper,
+  ShieldAlert
 } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -39,7 +40,10 @@ function accountSubtitle(role: string | undefined, registeredAt: string | undefi
 
 export function Layout() {
   const location = useLocation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, hasRole } = useAuth();
+  const visibleNavItems = hasRole('moderator', 'administrator')
+    ? [...navItems, { to: '/moderacija', label: 'Moderacija', icon: ShieldAlert }]
+    : navItems;
   const [teams, setTeams] = useState<Team[]>([]);
   const activeMobileNavRef = useRef<HTMLAnchorElement>(null);
   const selectedTeam = teams.find((team) => team.id === user?.favoritniTimovi[0]);
@@ -100,7 +104,7 @@ export function Layout() {
 
       <div className="w-full max-w-full overflow-hidden border-b border-slate-200 bg-white md:hidden">
         <nav className="flex w-full max-w-full gap-1 overflow-x-auto px-3 py-2">
-          {navItems.map(({ to, label, icon: Icon }) => (
+          {visibleNavItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               ref={location.pathname === to || (to !== '/' && location.pathname.startsWith(`${to}/`)) ? activeMobileNavRef : undefined}
@@ -122,7 +126,7 @@ export function Layout() {
         <aside className="hidden md:block">
           <nav className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <p className="border-b border-slate-100 px-4 py-3 text-[11px] font-bold uppercase text-slate-400">Meni</p>
-            {navItems.map(({ to, label, icon: Icon }) => (
+            {visibleNavItems.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}

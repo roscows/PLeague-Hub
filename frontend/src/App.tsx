@@ -15,6 +15,7 @@ import { TablePage } from './pages/Table';
 import { MatchDetailPage } from './pages/MatchDetail';
 import { PlayerProfilePage } from './pages/PlayerProfile';
 import { ClubProfilePage } from './pages/ClubProfile';
+import { ModerationPanel } from './pages/ModerationPanel';
 
 export function App() {
   return (
@@ -35,6 +36,7 @@ export function App() {
         <Route path="register" element={<Register />} />
         <Route element={<ProtectedRoute allowedRoles={['moderator', 'administrator']} />}>
           <Route path="news/sources" element={<NewsSourcesPage />} />
+          <Route path="moderacija" element={<ModerationPanel />} />
         </Route>
       </Route>
     </Routes>

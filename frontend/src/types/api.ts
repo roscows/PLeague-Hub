@@ -312,6 +312,7 @@ export interface CommentReport {
   komentarTekst: string;
   autorId: string;
   autorUsername: string;
+  autorUloga: Role;
   prijavioUsername: string;
   kategorija: ReportCategory;
   opis: string;
