@@ -25,6 +25,7 @@ public sealed class MongoIndexInitializer
         await CreateUserIndexesAsync(cancellationToken);
         await CreatePostIndexesAsync(cancellationToken);
         await CreateCommentIndexesAsync(cancellationToken);
+        await CreateCommentReportIndexesAsync(cancellationToken);
         await CreateCommentVoteIndexesAsync(cancellationToken);
         await CreateModerationActionIndexesAsync(cancellationToken);
         await CreateNewsSourceIndexesAsync(cancellationToken);
@@ -218,6 +219,25 @@ public sealed class MongoIndexInitializer
         };
 
         await _context.Comments.Indexes.CreateManyAsync(indexes, cancellationToken);
+    }
+
+    private async Task CreateCommentReportIndexesAsync(CancellationToken cancellationToken)
+    {
+        var indexes = new[]
+        {
+            new CreateIndexModel<CommentReportDocument>(
+                Builders<CommentReportDocument>.IndexKeys
+                    .Ascending(report => report.Status)
+                    .Descending(report => report.DatumPrijave),
+                new CreateIndexOptions { Name = "idx_commentReports_status_datum" }),
+            new CreateIndexModel<CommentReportDocument>(
+                Builders<CommentReportDocument>.IndexKeys
+                    .Ascending(report => report.KomentarId)
+                    .Ascending(report => report.PrijavioId),
+                new CreateIndexOptions { Name = "idx_commentReports_komentar_prijavio" })
+        };
+
+        await _context.CommentReports.Indexes.CreateManyAsync(indexes, cancellationToken);
     }
 
     private async Task CreateCommentVoteIndexesAsync(CancellationToken cancellationToken)

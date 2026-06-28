@@ -35,6 +35,7 @@ public sealed class MongoContext
         Users = Database.GetCollection<User>(settings.UsersCollectionName);
         Posts = Database.GetCollection<Post>(settings.PostsCollectionName);
         Comments = Database.GetCollection<Comment>(settings.CommentsCollectionName);
+        CommentReports = Database.GetCollection<CommentReportDocument>(settings.CommentReportsCollectionName);
         CommentVotes = Database.GetCollection<CommentVote>(settings.CommentVotesCollectionName);
         ModerationActions = Database.GetCollection<ModerationAction>(settings.ModerationActionsCollectionName);
         NewsSources = Database.GetCollection<NewsSource>(settings.NewsSourcesCollectionName);
@@ -65,6 +66,8 @@ public sealed class MongoContext
 
     public IMongoCollection<Comment> Comments { get; }
 
+    public IMongoCollection<CommentReportDocument> CommentReports { get; }
+
     public IMongoCollection<CommentVote> CommentVotes { get; }
 
     public IMongoCollection<ModerationAction> ModerationActions { get; }
@@ -89,6 +92,7 @@ public sealed class MongoContext
             var type when type == typeof(User) => (IMongoCollection<TDocument>)Users,
             var type when type == typeof(Post) => (IMongoCollection<TDocument>)Posts,
             var type when type == typeof(Comment) => (IMongoCollection<TDocument>)Comments,
+            var type when type == typeof(CommentReportDocument) => (IMongoCollection<TDocument>)CommentReports,
             var type when type == typeof(CommentVote) => (IMongoCollection<TDocument>)CommentVotes,
             var type when type == typeof(ModerationAction) => (IMongoCollection<TDocument>)ModerationActions,
             var type when type == typeof(NewsSource) => (IMongoCollection<TDocument>)NewsSources,
