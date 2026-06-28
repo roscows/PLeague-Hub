@@ -126,10 +126,8 @@ export function GlobalSearch() {
                   to={result.type === 'team' ? `/klub/${result.providerId}` : `/igrac/${result.providerId}`}
                 >
                   <span className="grid size-9 place-items-center rounded-md bg-slate-100">
-                    {result.type === 'team' ? (
+                    {result.imageUrl ? (
                       <TeamLogo className="size-7" logoUrl={result.imageUrl} name={result.name} />
-                    ) : result.imageUrl ? (
-                      <img className="size-7 object-contain" src={result.imageUrl} alt="" />
                     ) : result.type === 'player' ? (
                       <UserRound size={18} className="text-slate-500" />
                     ) : (
