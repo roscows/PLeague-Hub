@@ -12,10 +12,12 @@ namespace PLeagueHub.Api.Controllers;
 public sealed class ForumController : ControllerBase
 {
     private readonly IForumService _forumService;
+    private readonly ICommentReportService _commentReportService;
 
-    public ForumController(IForumService forumService)
+    public ForumController(IForumService forumService, ICommentReportService commentReportService)
     {
         _forumService = forumService;
+        _commentReportService = commentReportService;
     }
 
     [HttpGet]
@@ -136,6 +138,39 @@ public sealed class ForumController : ControllerBase
         return result.Error == ForumError.None
             ? Ok(result.Value)
             : MapError(result.Error, result.Message);
+    }
+
+    [Authorize]
+    [HttpPost("comments/{commentId}/report")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReportCommentAsync(
+        string commentId,
+        CreateCommentReportRequest request,
+        CancellationToken cancellationToken)
+    {
+        var reporterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(reporterId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _commentReportService.CreateAsync(commentId, reporterId, request, cancellationToken);
+
+        return result switch
+        {
+            ReportCreateResult.Created => StatusCode(
+                StatusCodes.Status201Created,
+                new { message = "Prijava je zabelezena." }),
+            ReportCreateResult.DuplicatePending => Ok(new { message = "Vec ste prijavili ovaj komentar." }),
+            ReportCreateResult.CommentNotFound => NotFound(new { message = "Komentar nije pronadjen." }),
+            ReportCreateResult.CannotReportOwn => BadRequest(new { message = "Ne mozete prijaviti sopstveni komentar." }),
+            _ => BadRequest(new { message = "Neispravna kategorija prijave." })
+        };
     }
 
     private ActionResult MapError(ForumError error, string? message)
