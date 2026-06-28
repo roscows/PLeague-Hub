@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ModerationModal } from '../components/forum/ModerationModal';
 import { ActivityFeed } from '../components/moderation/ActivityFeed';
 import { StaffNotices } from '../components/moderation/StaffNotices';
+import { UserManagement } from '../components/moderation/UserManagement';
 import { RelativeTime } from '../components/RelativeTime';
 import { getApiErrorMessage } from '../services/apiError';
 import { moderationApi } from '../services/moderationApi';
@@ -134,6 +135,8 @@ export function ModerationPanel() {
           </ul>
         )}
       </section>
+
+      <UserManagement />
 
       {authorTarget && (
         <ModerationModal
