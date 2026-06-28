@@ -17,6 +17,7 @@ public sealed class ModerationController : ControllerBase
     private readonly IModerationService _service;
     private readonly ICommentReportService _reportService;
     private readonly IStaffNoticeService _noticeService;
+    private readonly IModerationPanelService _panelService;
     private readonly TimeProvider _timeProvider;
 
     public ModerationController(
@@ -24,13 +25,57 @@ public sealed class ModerationController : ControllerBase
         IModerationService service,
         ICommentReportService reportService,
         IStaffNoticeService noticeService,
+        IModerationPanelService panelService,
         TimeProvider timeProvider)
     {
         _repository = repository;
         _service = service;
         _reportService = reportService;
         _noticeService = noticeService;
+        _panelService = panelService;
         _timeProvider = timeProvider;
+    }
+
+    [HttpGet("activity")]
+    [ProducesResponseType(typeof(IReadOnlyCollection<ModerationActivityDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyCollection<ModerationActivityDto>>> GetActivityAsync(
+        [FromQuery] int limit = 20,
+        CancellationToken cancellationToken = default)
+        => Ok(await _panelService.GetActivityAsync(limit, cancellationToken));
+
+    [HttpGet("users")]
+    [ProducesResponseType(typeof(IReadOnlyCollection<PanelUserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyCollection<PanelUserDto>>> GetUsersAsync(
+        [FromQuery] string? q,
+        [FromQuery] bool staffOnly = false,
+        CancellationToken cancellationToken = default)
+        => Ok(await _panelService.SearchUsersAsync(q, staffOnly, cancellationToken));
+
+    [HttpPut("users/{id}/role")]
+    [ProducesResponseType(typeof(PanelUserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangeRoleAsync(
+        string id,
+        ChangeRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var (result, user) = await _panelService.ChangeRoleAsync(
+            User.FindFirstValue(ClaimTypes.NameIdentifier)!,
+            id,
+            request.Uloga,
+            cancellationToken);
+
+        return result switch
+        {
+            RoleChangeResult.Changed => Ok(user),
+            RoleChangeResult.Forbidden => StatusCode(StatusCodes.Status403Forbidden, new { message = "Samo administrator moze menjati uloge." }),
+            RoleChangeResult.NotFound => NotFound(),
+            RoleChangeResult.InvalidRole => BadRequest(new { message = "Nedozvoljena uloga." }),
+            RoleChangeResult.SelfChange => BadRequest(new { message = "Ne mozete promeniti sopstvenu ulogu." }),
+            _ => BadRequest(new { message = "Ne mozete menjati ulogu administratora." })
+        };
     }
 
     [HttpGet("notices")]
