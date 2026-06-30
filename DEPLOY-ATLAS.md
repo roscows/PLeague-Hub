@@ -3,12 +3,20 @@
 Cilj: ista baza dostupna sa bilo kog računara, a aplikacija se pokreće lokalno na
 tuđem laptopu.
 
-## Šta je već rešeno
-- ✅ **Slike** (grbovi + fotke igrača) su sada u repou — stižu sa `git clone`.
-- ✅ **JWT secret** je u `appsettings.json` (dev default) — radi bez dodatne konfiguracije.
+## Šta je već rešeno (NE moraš ništa od ovoga)
+- ✅ **Baza je u Atlas-u** (cloud) — migrirano svih 17 kolekcija (1665 dokumenata).
+- ✅ **Aplikacija je već povezana na Atlas** (`appsettings.json` → `MongoDb.ConnectionString`).
+  Provereno: sa ugašenim lokalnim Mongom app i dalje vraća podatke iz Atlas-a.
+- ✅ **Slike** (grbovi + fotke igrača) su u repou — stižu sa `git clone`.
+- ✅ **JWT secret** je u `appsettings.json` — radi bez dodatne konfiguracije.
 - ✅ **FootApi ključ NIJE potreban** za demo (svi podaci su u bazi). *Napomena: ne otvaraj
   profil igrača/kluba koji nikad nije otvoren (nije keširan) jer bi to pokušalo živi poziv.
   Sve što ćeš pokazivati je već keširano.*
+
+## ⚠️ JEDINO što još moraš ručno (2 stvari)
+1. **Atlas → Network Access → Add IP Address → „Allow access from anywhere" (`0.0.0.0/0`)**
+   — bez ovoga baza radi samo sa tvoje trenutne mreže, NE i sa drugarovog laptopa.
+2. Na drugarovom laptopu instaliraj **.NET 10 SDK** i **Node.js** (vidi Korak 4).
 
 ## Korak 1 — Napravi besplatan MongoDB Atlas klaster (jednom)
 1. Idi na **https://www.mongodb.com/cloud/atlas/register** i napravi nalog.
