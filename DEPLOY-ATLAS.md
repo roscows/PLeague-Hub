@@ -9,9 +9,9 @@ tuđem laptopu.
   Provereno: sa ugašenim lokalnim Mongom app i dalje vraća podatke iz Atlas-a.
 - ✅ **Slike** (grbovi + fotke igrača) su u repou — stižu sa `git clone`.
 - ✅ **JWT secret** je u `appsettings.json` — radi bez dodatne konfiguracije.
-- ✅ **FootApi ključ NIJE potreban** za demo (svi podaci su u bazi). *Napomena: ne otvaraj
-  profil igrača/kluba koji nikad nije otvoren (nije keširan) jer bi to pokušalo živi poziv.
-  Sve što ćeš pokazivati je već keširano.*
+- ✅ **FootApi ključ je u `appsettings.json`** — možeš otvoriti **bilo kog** igrača/klub:
+  ako je keširan čita iz Atlas-a, ako nije povuče se **uživo** sa FootApi (i odmah kešira).
+  Ne moraš da brineš koga će profesor tražiti.
 
 ## ⚠️ JEDINO što još moraš ručno (2 stvari)
 1. **Atlas → Network Access → Add IP Address → „Allow access from anywhere" (`0.0.0.0/0`)**
@@ -82,6 +82,8 @@ dotnet run
 - Otvori tabelu, profil kluba, statistiku, forum, moderatorski panel.
 - Ako nešto ne radi: proveri Network Access u Atlas-u (0.0.0.0/0) i tačnost URI-ja.
 
-## Bezbednosna napomena
-- Po završetku prezentacije, u Atlas-u promeni lozinku DB korisnika (ako si je upisao u
-  `appsettings.json`) i po želji ograniči Network Access.
+## Bezbednosna napomena (posle prezentacije)
+U `appsettings.json` su sada radi prenosivosti upisani **Mongo lozinka** i **FootApi ključ**.
+Za svaki slučaj posle prezentacije:
+- U **Atlas-u** promeni lozinku DB korisnika (i po želji ograniči Network Access).
+- Na **RapidAPI** regeneriši FootApi ključ (Dashboard → app → Security → Regenerate).
