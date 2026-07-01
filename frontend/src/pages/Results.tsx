@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MatchRow } from '../components/MatchRow';
 import { matchesApi } from '../services/matchesApi';
 import { teamsApi } from '../services/teamsApi';
+import { DEFAULT_SEASON } from '../constants';
 import type { Match, Team } from '../types/api';
 
 export function Results() {
@@ -25,7 +26,7 @@ export function Results() {
     [matches]
   );
 
-  const selectedSeason = season || seasons[0] || '';
+  const selectedSeason = season || (seasons.includes(DEFAULT_SEASON) ? DEFAULT_SEASON : seasons[0]) || '';
 
   const gameweeks = useMemo(
     () =>

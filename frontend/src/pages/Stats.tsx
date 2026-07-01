@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { playerStatsApi } from '../services/playerStatsApi';
 import { standingsApi } from '../services/standingsApi';
+import { DEFAULT_SEASON } from '../constants';
 import type { PlayerStat, Season } from '../types/api';
 import { TeamLogo } from '../components/TeamLogo';
 
@@ -20,7 +21,9 @@ export function Stats() {
     standingsApi.getSeasons().then(setSeasons).catch(() => setSeasons([]));
   }, []);
 
-  const selectedSeason = season || seasons[0]?.season || '';
+  const selectedSeason = season
+    || (seasons.some((item) => item.season === DEFAULT_SEASON) ? DEFAULT_SEASON : seasons[0]?.season)
+    || '';
 
   useEffect(() => {
     if (!selectedSeason) {

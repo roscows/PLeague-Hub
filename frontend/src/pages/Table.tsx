@@ -2,6 +2,7 @@ import { ListOrdered } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { standingsApi } from '../services/standingsApi';
+import { DEFAULT_SEASON } from '../constants';
 import type { Season, StandingRow } from '../types/api';
 import { TeamLogo } from '../components/TeamLogo';
 
@@ -17,7 +18,9 @@ export function TablePage() {
       .catch(() => setSeasons([]));
   }, []);
 
-  const selectedSeason = season || seasons[0]?.season || '';
+  const selectedSeason = season
+    || (seasons.some((item) => item.season === DEFAULT_SEASON) ? DEFAULT_SEASON : seasons[0]?.season)
+    || '';
 
   useEffect(() => {
     if (!selectedSeason) {
