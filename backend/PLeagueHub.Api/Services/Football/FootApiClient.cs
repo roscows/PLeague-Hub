@@ -262,11 +262,13 @@ public sealed class FootApiClient : IFootballProvider
             .Select(incident => new FootballIncident(
                 incident.IncidentType!,
                 incident.Time,
+                incident.AddedTime is int added && added != 999 ? added : 0,
                 incident.IsHome ?? false,
                 incident.Player?.Name ?? string.Empty,
                 incident.PlayerIn?.Name ?? string.Empty,
                 incident.PlayerOut?.Name ?? string.Empty,
-                incident.Text ?? string.Empty))
+                incident.Text ?? string.Empty,
+                incident.IncidentClass ?? string.Empty))
             .ToArray() ?? [];
     }
 
@@ -595,6 +597,8 @@ public sealed class FootApiClient : IFootballProvider
     private sealed record FootApiIncident(
         string? IncidentType,
         int Time,
+        int? AddedTime,
+        string? IncidentClass,
         bool? IsHome,
         FootApiNamed? Player,
         FootApiNamed? PlayerIn,

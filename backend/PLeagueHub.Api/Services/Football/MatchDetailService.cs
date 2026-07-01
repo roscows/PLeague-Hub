@@ -17,6 +17,9 @@ public sealed class MatchDetailService : IMatchDetailService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    // Povecaj kad se promeni obrada incidenata da se stari kes automatski osvezi.
+    private const int SchemaVersion = 2;
+
     private readonly IRepository<Match> _matches;
     private readonly IRepository<Team> _teams;
     private readonly IRepository<MatchDetailDocument> _details;
@@ -61,7 +64,7 @@ public sealed class MatchDetailService : IMatchDetailService
     {
         var stored = await _details.FindOneAsync(document => document.MatchId == matchId, cancellationToken);
 
-        if (stored is not null)
+        if (stored is not null && stored.Version == SchemaVersion)
         {
             var cached = JsonSerializer.Deserialize<CachedDetail>(stored.DetailJson, JsonOptions);
 
@@ -92,15 +95,23 @@ public sealed class MatchDetailService : IMatchDetailService
 
         var detail = new CachedDetail(MapStats(stats), MapIncidents(incidents), MapLineups(lineups));
 
-        await _details.CreateAsync(
-            new MatchDetailDocument
-            {
-                MatchId = matchId,
-                ProviderId = providerId,
-                DetailJson = JsonSerializer.Serialize(detail, JsonOptions),
-                FetchedAt = DateTime.UtcNow
-            },
-            cancellationToken);
+        var document = new MatchDetailDocument
+        {
+            MatchId = matchId,
+            ProviderId = providerId,
+            DetailJson = JsonSerializer.Serialize(detail, JsonOptions),
+            FetchedAt = DateTime.UtcNow,
+            Version = SchemaVersion
+        };
+
+        if (stored is not null)
+        {
+            await _details.UpdateAsync(stored.Id, document, cancellationToken);
+        }
+        else
+        {
+            await _details.CreateAsync(document, cancellationToken);
+        }
 
         return detail;
     }
@@ -127,14 +138,21 @@ public sealed class MatchDetailService : IMatchDetailService
     private static IReadOnlyCollection<StatItemDto> MapStats(IReadOnlyCollection<FootballStatItem> stats)
         => stats.Select(item => new StatItemDto(item.Name, item.Home, item.Away)).ToArray();
 
+    // FootApi vraca incidente newest-first; obrcemo u hronoloski red. Zadrzavamo samo
+    // HT/FT granice (period) i gol/karton/izmenu — ostalo (injuryTime, VAR odluke i sl.)
+    // izbacujemo da tok meca bude cist.
     private static IReadOnlyCollection<IncidentDto> MapIncidents(IReadOnlyCollection<FootballIncident> incidents)
         => incidents
-            .OrderBy(incident => incident.Minute)
+            .Reverse()
+            .Where(incident =>
+                incident.Type is "period" or "goal" or "card" or "substitution")
             .Select(incident => new IncidentDto(
                 incident.Type,
                 incident.Minute,
+                incident.AddedTime,
                 incident.IsHome,
-                BuildIncidentText(incident)))
+                BuildIncidentText(incident),
+                incident.Class))
             .ToArray();
 
     private static string BuildIncidentText(FootballIncident incident)

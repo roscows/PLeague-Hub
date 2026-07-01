@@ -14,7 +14,7 @@ public sealed record MatchHeaderDto(
 
 public sealed record StatItemDto(string Naziv, string Domacin, string Gost);
 
-public sealed record IncidentDto(string Tip, int Minut, bool Domacin, string Tekst);
+public sealed record IncidentDto(string Tip, int Minut, int Dodatak, bool Domacin, string Tekst, string Klasa);
 
 public sealed record LineupPlayerDto(string Ime, int Broj, bool Zamena, string Pozicija);
 

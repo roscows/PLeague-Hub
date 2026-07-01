@@ -17,4 +17,9 @@ public sealed class MatchDetailDocument : BaseDocument
 
     [BsonElement("fetchedAt")]
     public DateTime FetchedAt { get; set; }
+
+    // Shema keširanih incidenata; kad se logika obrade promeni, povecava se broj
+    // pa se stari zapisi automatski ponovo povuku sa FootApi-ja pri sledecem pregledu.
+    [BsonElement("schema_version")]
+    public int Version { get; set; }
 }

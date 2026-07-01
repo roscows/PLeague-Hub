@@ -5,11 +5,13 @@ public sealed record FootballStatItem(string Name, string Home, string Away);
 public sealed record FootballIncident(
     string Type,
     int Minute,
+    int AddedTime,
     bool IsHome,
     string PlayerName,
     string PlayerInName,
     string PlayerOutName,
-    string Detail);
+    string Detail,
+    string Class);
 
 public sealed record FootballLineupPlayer(string Name, int Number, bool IsSubstitute, string Position);
 

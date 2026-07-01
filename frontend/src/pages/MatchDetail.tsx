@@ -10,15 +10,25 @@ function statPercent(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function IncidentIcon({ tip }: { tip: string }) {
+function IncidentIcon({ tip, klasa }: { tip: string; klasa: string }) {
   if (tip === 'goal') {
     return <Goal size={15} className="shrink-0 text-emerald-600" />;
   }
   if (tip === 'substitution') {
     return <ArrowLeftRight size={14} className="shrink-0 text-sky-600" />;
   }
-  // karton (žuti/crveni se ne razlikuju u podacima — prikazujemo kao karton)
-  return <span aria-hidden="true" className="inline-block h-4 w-[11px] shrink-0 rounded-[2px] bg-amber-400" />;
+  // karton: crveni (i drugi žuti = crveni) crven, inače žuti
+  const red = klasa === 'red' || klasa === 'yellowRed';
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-block h-4 w-[11px] shrink-0 rounded-[2px] ${red ? 'bg-red-600' : 'bg-amber-400'}`}
+    />
+  );
+}
+
+function minuteLabel(minut: number, dodatak: number): string {
+  return dodatak > 0 ? `${minut}+${dodatak}'` : `${minut}'`;
 }
 
 function periodLabel(text: string, minute: number): string {
@@ -126,8 +136,8 @@ export function MatchDetailPage() {
 
               return (
                 <li key={`${incident.minut}-${index}`} className={`flex items-center gap-2 px-4 py-2 text-sm ${incident.domacin ? '' : 'flex-row-reverse text-right'}`}>
-                  <span className="w-8 text-xs font-bold text-slate-400">{incident.minut}'</span>
-                  <IncidentIcon tip={incident.tip} />
+                  <span className="w-10 shrink-0 text-xs font-bold text-slate-400">{minuteLabel(incident.minut, incident.dodatak)}</span>
+                  <IncidentIcon tip={incident.tip} klasa={incident.klasa} />
                   <span className="font-semibold">{incident.tekst}</span>
                 </li>
               );

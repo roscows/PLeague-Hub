@@ -102,8 +102,10 @@ export interface StatItem {
 export interface Incident {
   tip: string;
   minut: number;
+  dodatak: number;
   domacin: boolean;
   tekst: string;
+  klasa: string;
 }
 
 export interface LineupPlayer {
