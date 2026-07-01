@@ -5,9 +5,14 @@ import { matchDetailApi } from '../services/matchDetailApi';
 import type { MatchDetail, MatchTeamInfo } from '../types/api';
 import { TeamLogo } from '../components/TeamLogo';
 
-function statPercent(value: string): number {
-  const parsed = Number.parseFloat(value.replace('%', ''));
-  return Number.isFinite(parsed) ? parsed : 0;
+// Numerička osnova za širinu linije. FootApi daje vrednosti u tri formata:
+// "61%" (procenat), "19" (broj) i "97/143 (68%)" (razlomak + procenat uspešnosti).
+// Za razlomak koristimo procenat u zagradi jer to korisnik i vidi kao poređenje.
+function statValue(value: string): number {
+  const fraction = value.match(/\((\d+(?:\.\d+)?)%\)/);
+  const raw = fraction ? fraction[1] : value.replace('%', '');
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 }
 
 function IncidentIcon({ tip, klasa }: { tip: string; klasa: string }) {
@@ -81,7 +86,11 @@ export function MatchDetailPage() {
     return <p className="px-4 py-10 text-center text-sm text-red-500">Trenutno nije moguce ucitati detalje meca.</p>;
   }
 
-  const { header, statistics, incidents, lineups } = detail;
+  const { header, incidents, lineups } = detail;
+  // FootApi vraca isti podatak u vise grupa; prikazujemo svaku statistiku jednom.
+  const statistics = detail.statistics.filter(
+    (stat, index, all) => all.findIndex((other) => other.naziv === stat.naziv) === index
+  );
   const played = header.golDomacin !== null && header.golGost !== null;
   const empty = statistics.length === 0 && incidents.length === 0 && !lineups;
 
@@ -151,8 +160,8 @@ export function MatchDetailPage() {
           <h2 className="mb-3 text-[11px] font-bold uppercase text-slate-400">Statistika</h2>
           <div className="space-y-3">
             {statistics.map((stat) => {
-              const home = statPercent(stat.domacin);
-              const total = home + statPercent(stat.gost);
+              const home = statValue(stat.domacin);
+              const total = home + statValue(stat.gost);
               const homePct = total > 0 ? (home / total) * 100 : 50;
               return (
                 <div key={stat.naziv}>
