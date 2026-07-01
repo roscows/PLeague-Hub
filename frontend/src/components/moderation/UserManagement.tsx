@@ -20,7 +20,7 @@ interface ModerationTarget {
   state: ModerationState | null;
 }
 
-export function UserManagement() {
+export function UserManagement({ onModerated }: { onModerated?: () => void }) {
   const { hasRole } = useAuth();
   const isAdmin = hasRole('administrator');
   const [query, setQuery] = useState('');
@@ -156,7 +156,7 @@ export function UserManagement() {
       {moderationTarget && (
         <ModerationModal
           currentState={moderationTarget.state}
-          onChanged={() => setModerationTarget(null)}
+          onChanged={() => { setModerationTarget(null); loadStaff(); onModerated?.(); }}
           onClose={() => setModerationTarget(null)}
           target={{ id: moderationTarget.id, username: moderationTarget.username, role: moderationTarget.role }}
         />

@@ -1,4 +1,4 @@
-import { ArrowLeft, Goal, RectangleVertical } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Goal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { matchDetailApi } from '../services/matchDetailApi';
@@ -8,6 +8,23 @@ import { TeamLogo } from '../components/TeamLogo';
 function statPercent(value: string): number {
   const parsed = Number.parseFloat(value.replace('%', ''));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function IncidentIcon({ tip }: { tip: string }) {
+  if (tip === 'goal') {
+    return <Goal size={15} className="shrink-0 text-emerald-600" />;
+  }
+  if (tip === 'substitution') {
+    return <ArrowLeftRight size={14} className="shrink-0 text-sky-600" />;
+  }
+  // karton (žuti/crveni se ne razlikuju u podacima — prikazujemo kao karton)
+  return <span aria-hidden="true" className="inline-block h-4 w-[11px] shrink-0 rounded-[2px] bg-amber-400" />;
+}
+
+function periodLabel(text: string, minute: number): string {
+  if (text === 'HT') return 'Poluvreme';
+  if (text === 'FT') return 'Kraj meca';
+  return text || `${minute}'`;
 }
 
 function ClubLink({ team }: { team: MatchTeamInfo }) {
@@ -96,13 +113,25 @@ export function MatchDetailPage() {
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <h2 className="bg-ink px-4 py-2 text-[11px] font-bold uppercase text-slate-300">Tok meca</h2>
           <ul className="divide-y divide-slate-100">
-            {incidents.map((incident, index) => (
-              <li key={`${incident.minut}-${index}`} className={`flex items-center gap-2 px-4 py-2 text-sm ${incident.domacin ? '' : 'flex-row-reverse text-right'}`}>
-                <span className="w-8 text-xs font-bold text-slate-400">{incident.minut}'</span>
-                {incident.tip === 'goal' ? <Goal size={15} className="text-emerald-600" /> : <RectangleVertical size={15} className="text-amber-500" />}
-                <span className="font-semibold">{incident.tekst}</span>
-              </li>
-            ))}
+            {incidents.map((incident, index) => {
+              const isEvent = incident.tip === 'goal' || incident.tip === 'card' || incident.tip === 'substitution';
+
+              if (!isEvent) {
+                return (
+                  <li key={`${incident.minut}-${index}`} className="flex items-center justify-center bg-slate-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                    {periodLabel(incident.tekst, incident.minut)}
+                  </li>
+                );
+              }
+
+              return (
+                <li key={`${incident.minut}-${index}`} className={`flex items-center gap-2 px-4 py-2 text-sm ${incident.domacin ? '' : 'flex-row-reverse text-right'}`}>
+                  <span className="w-8 text-xs font-bold text-slate-400">{incident.minut}'</span>
+                  <IncidentIcon tip={incident.tip} />
+                  <span className="font-semibold">{incident.tekst}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

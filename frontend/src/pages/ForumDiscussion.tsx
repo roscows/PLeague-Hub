@@ -1,5 +1,5 @@
 import { MessageSquareReply } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { RelativeTime } from '../components/RelativeTime';
 import { ForumReplyForm } from '../components/forum/ForumReplyForm';
@@ -57,6 +57,19 @@ export function ForumDiscussionPage() {
   async function reloadComments() {
     if (id) setComments(await forumApi.listComments(id));
   }
+
+  // Kad korisnik promeni omiljeni klub, ponovo povuci komentare da se grb autora
+  // odmah osvezi (bez rucnog refresha stranice).
+  const favTeamId = user?.favoritniTimovi?.[0];
+  const favInitialized = useRef(false);
+  useEffect(() => {
+    if (!favInitialized.current) {
+      favInitialized.current = true;
+      return;
+    }
+    reloadComments().catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [favTeamId]);
 
   async function openModeration(comment: ForumCommentNode) {
     setMutationError(null);

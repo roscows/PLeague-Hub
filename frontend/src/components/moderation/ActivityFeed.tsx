@@ -6,16 +6,20 @@ import { RelativeTime } from '../RelativeTime';
 
 function measureLabel(tip: string | null): string {
   if (tip === 'mute') return 'mute';
-  if (tip === 'suspenzija') return 'suspenziju';
+  if (tip === 'suspenziju' || tip === 'suspenzija') return 'suspenziju';
   return tip ?? 'meru';
 }
 
-export function ActivityFeed() {
+interface ActivityFeedProps {
+  reloadSignal?: number;
+}
+
+export function ActivityFeed({ reloadSignal = 0 }: ActivityFeedProps) {
   const [items, setItems] = useState<ModerationActivity[]>([]);
 
   useEffect(() => {
     panelApi.listActivity(15).then(setItems).catch(() => setItems([]));
-  }, []);
+  }, [reloadSignal]);
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -29,10 +33,23 @@ export function ActivityFeed() {
         <ul className="divide-y divide-slate-100">
           {items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 px-4 py-2 text-sm">
-              <span className="font-semibold text-slate-700">{item.moderatorUsername}</span>
-              <span className="text-slate-500">{item.akcija === 'revoke' ? 'ukinuo meru korisniku' : `izrekao ${measureLabel(item.tipMere)} korisniku`}</span>
-              <span className="font-semibold text-slate-700">{item.korisnikUsername}</span>
-              {item.razlog && <span className="text-slate-400">— {item.razlog}</span>}
+              {item.akcija === 'istekla' ? (
+                <>
+                  <span className="text-slate-500">Istekla {measureLabel(item.tipMere)} korisniku</span>
+                  <span className="font-semibold text-slate-700">{item.korisnikUsername}</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-slate-700">{item.moderatorUsername}</span>
+                  <span className="text-slate-500">
+                    {item.akcija === 'ukinuta'
+                      ? 'ukinuo meru korisniku'
+                      : `izrekao ${measureLabel(item.tipMere)} korisniku`}
+                  </span>
+                  <span className="font-semibold text-slate-700">{item.korisnikUsername}</span>
+                  {item.razlog && <span className="text-slate-400">— {item.razlog}</span>}
+                </>
+              )}
               <RelativeTime className="ml-auto text-[11px] text-slate-400" value={item.datum} />
             </li>
           ))}

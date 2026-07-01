@@ -29,6 +29,11 @@ export function ModerationPanel() {
   const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [authorTarget, setAuthorTarget] = useState<AuthorTarget | null>(null);
+  const [modSignal, setModSignal] = useState(0);
+
+  function afterModeration() {
+    setModSignal((current) => current + 1);
+  }
 
   async function load() {
     setStatus('loading');
@@ -76,7 +81,7 @@ export function ModerationPanel() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <StaffNotices />
-        <ActivityFeed />
+        <ActivityFeed reloadSignal={modSignal} />
       </div>
 
       <h2 className="px-1 pt-2 text-sm font-extrabold text-slate-700">Prijave komentara{reports.length > 0 ? ` (${reports.length})` : ''}</h2>
@@ -136,12 +141,12 @@ export function ModerationPanel() {
         )}
       </section>
 
-      <UserManagement />
+      <UserManagement onModerated={afterModeration} />
 
       {authorTarget && (
         <ModerationModal
           currentState={authorTarget.state}
-          onChanged={() => setAuthorTarget(null)}
+          onChanged={() => { setAuthorTarget(null); afterModeration(); }}
           onClose={() => setAuthorTarget(null)}
           target={{ id: authorTarget.id, username: authorTarget.username, role: authorTarget.role }}
         />

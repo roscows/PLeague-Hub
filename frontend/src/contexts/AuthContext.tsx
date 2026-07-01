@@ -74,6 +74,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => subscribeUnauthorized(logout), [logout]);
 
+  // Osvezi profil (i moderacione mere) kad se korisnik vrati na tab i periodicno,
+  // da bi mute/suspenzija bila vidljiva bez rucnog osvezavanja stranice.
+  useEffect(() => {
+    if (!token) return;
+
+    const refresh = () => { refreshProfile().catch(() => undefined); };
+    window.addEventListener('focus', refresh);
+    const intervalId = window.setInterval(refresh, 45000);
+
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.clearInterval(intervalId);
+    };
+  }, [token, refreshProfile]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       token,
