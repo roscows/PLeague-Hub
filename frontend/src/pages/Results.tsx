@@ -57,7 +57,7 @@ export function Results() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-bold uppercase text-brand">Premier League</p>
-            <h1 className="mt-1 text-xl font-extrabold">Rezultati i raspored</h1>
+            <h1 className="mt-1 text-xl font-extrabold text-slate-950">Rezultati i raspored</h1>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <select

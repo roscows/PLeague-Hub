@@ -60,7 +60,7 @@ export function Stats() {
             <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-brand">
               <TrendingUp size={13} /> Najbolji igraci
             </p>
-            <h1 className="mt-1 text-xl font-extrabold">Statistike igraca</h1>
+            <h1 className="mt-1 text-xl font-extrabold text-slate-950">Statistike igraca</h1>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <label className="relative">

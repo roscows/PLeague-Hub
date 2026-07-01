@@ -90,7 +90,7 @@ export function News() {
     <section className="min-w-0">
       <header className="flex min-h-20 items-center justify-between gap-4 border-b-2 border-brand bg-white px-4 py-4">
         <div>
-          <p className="text-[11px] font-extrabold uppercase text-brand">Vesti</p>
+          <p className="text-[10px] font-bold uppercase text-brand">Vesti</p>
           <h1 className="mt-1 text-xl font-extrabold text-slate-950">Premier League uzivo</h1>
         </div>
         {canEdit && <div className="flex items-center gap-2">

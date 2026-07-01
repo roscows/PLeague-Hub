@@ -83,7 +83,7 @@ export function Forum() {
       <section className="overflow-hidden rounded border border-slate-200 bg-white shadow-sm">
         <header className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-extrabold uppercase text-brand">Forum</p>
+            <p className="text-[10px] font-bold uppercase text-brand">Forum</p>
             <h1 className="mt-1 text-xl font-extrabold text-slate-950">Premier League diskusije</h1>
           </div>
           {isAuthenticated ? (

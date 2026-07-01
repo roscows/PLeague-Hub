@@ -46,7 +46,7 @@ export function TablePage() {
             <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-brand">
               <ListOrdered size={13} /> Premier League
             </p>
-            <h1 className="mt-1 text-xl font-extrabold">Tabela</h1>
+            <h1 className="mt-1 text-xl font-extrabold text-slate-950">Tabela</h1>
           </div>
           <label className="flex flex-col text-xs font-semibold text-slate-500">
             Sezona

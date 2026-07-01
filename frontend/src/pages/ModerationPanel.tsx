@@ -75,7 +75,7 @@ export function ModerationPanel() {
         <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-brand">
           <ShieldAlert size={13} /> Moderacija
         </p>
-        <h1 className="mt-1 text-xl font-extrabold">Moderacija</h1>
+        <h1 className="mt-1 text-xl font-extrabold text-slate-950">Moderacija</h1>
         <p className="mt-1 text-sm text-slate-500">Centar za moderaciju zajednice.</p>
       </section>
 
